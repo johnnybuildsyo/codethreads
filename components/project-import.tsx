@@ -21,9 +21,10 @@ interface ProjectImportProps {
   username: string
   repos: GithubRepo[]
   onProjectSelect: (repoId: number) => void
+  isCreating?: boolean
 }
 
-export function ProjectImport({ username, repos, onProjectSelect }: ProjectImportProps) {
+export function ProjectImport({ repos, onProjectSelect, isCreating = false }: ProjectImportProps) {
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
 
   return (
@@ -34,7 +35,7 @@ export function ProjectImport({ username, repos, onProjectSelect }: ProjectImpor
           <CardDescription className="text-lg mt-2">Select a GitHub repository to start documenting your progress</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <RadioGroup className="space-y-4" onValueChange={(value) => setSelectedRepo(Number(value))}>
+          <RadioGroup className="space-y-4" onValueChange={(value) => setSelectedRepo(Number(value))} disabled={isCreating}>
             {repos.map((repo) => (
               <div key={repo.id} className="flex items-start space-x-3">
                 <RadioGroupItem value={repo.id.toString()} id={repo.id.toString()} className="mt-1" />
@@ -68,9 +69,17 @@ export function ProjectImport({ username, repos, onProjectSelect }: ProjectImpor
             ))}
           </RadioGroup>
           <div className="flex justify-end">
-            <Button size="lg" disabled={!selectedRepo} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
-              Start Code Thread
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" disabled={!selectedRepo || isCreating} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
+              {isCreating ? (
+                <>
+                  <span className="animate-pulse">Creating Thread...</span>
+                </>
+              ) : (
+                <>
+                  Start Code Thread
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
