@@ -1,8 +1,8 @@
-import { UserProfileCard } from "@/components/user-profile-card"
-import { ProjectList } from "@/components/project-list"
-import { UserSignup } from "@/components/user-signup"
-import { ProjectImportContainer } from "@/components/project-import-container"
-import Header from "@/components/header"
+import { UserProfileCard } from "@/components/users/user-profile-card"
+import { ProjectList } from "@/components/projects/project-list"
+import { UserSignup } from "@/components/auth/user-signup"
+import { ProjectImportContainer } from "@/components/projects/project-import-container"
+import Header from "@/components/layout/header"
 import { usersData } from "@/_mocks/users"
 import { mockRepos } from "@/_mocks/repos"
 

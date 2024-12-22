@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import Header from "@/components/header"
+import Header from "@/components/layout/header"
 import { projectData } from "@/_mocks/projects"
-import { ThreadCard } from "@/components/thread-card"
+import { ThreadCard } from "@/components/threads/thread-card"
 import Link from "next/link"
 
 interface ThreadPageProps {

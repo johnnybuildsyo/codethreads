@@ -1,5 +1,5 @@
-import Header from "@/components/header"
-import { ThreadCard } from "@/components/thread-card"
+import Header from "@/components/layout/header"
+import { ThreadCard } from "@/components/threads/thread-card"
 import { projectData } from "@/_mocks/projects"
 import { User, Star, GitFork, Eye, GitCommit, Calendar } from "lucide-react"
 import Link from "next/link"

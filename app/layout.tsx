@@ -1,5 +1,5 @@
 import { Rethink_Sans } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/threads/theme-provider"
 import "./globals.css"
 
 const displayFont = Rethink_Sans({
