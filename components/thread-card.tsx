@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { ThreadContent } from "./thread-content"
 import type { ThreadCardProps } from "@/types/thread"
