@@ -23,8 +23,9 @@ if (!GITHUB_TOKEN) {
 
 // Fetch basic commit data
 const fetchCommits = async () => {
+  // Get all commits by using a large per_page value
   const response = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits`,
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits?per_page=100`,
     {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -38,7 +39,14 @@ const fetchCommits = async () => {
   }
 
   const commits = await response.json();
-  return commits.map(commit => ({
+  
+  // Sort commits by date in ascending order (oldest first)
+  const sortedCommits = commits.sort((a, b) => {
+    return new Date(a.commit.author.date) - new Date(b.commit.author.date);
+  });
+
+  // Take only the first 10 commits
+  return sortedCommits.slice(0, 10).map(commit => ({
     sha: commit.sha,
     message: commit.commit.message,
     author: {
