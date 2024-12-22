@@ -14,8 +14,7 @@ export function ThreadCard({ thread, username, projectId, featured = false }: Th
     <Card className={`transition-shadow hover:shadow-md ${featured ? "border-2" : ""}`}>
       <CardHeader>
         <CardTitle className={featured ? "text-2xl" : "text-lg"}>{thread.title}</CardTitle>
-        <CardDescription className="text-sm flex items-center space-x-2">
-          <CalendarDays className="h-3 w-3" />
+        <CardDescription className="text-xs font-mono flex items-center space-x-2">
           <span>{thread.date}</span>
         </CardDescription>
       </CardHeader>

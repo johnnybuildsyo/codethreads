@@ -20,6 +20,7 @@ const usersData = {
         description: "A collection of reusable React components with Storybook integration.",
         threadCount: 15,
         lastUpdated: "2023-06-15",
+        image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000",
       },
       {
         id: 2,

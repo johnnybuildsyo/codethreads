@@ -1,4 +1,4 @@
-import { ThreadCard } from "./thread-card"
+import { ProjectCard } from "./project-card"
 
 interface Project {
   id: number
@@ -6,6 +6,7 @@ interface Project {
   description: string
   threadCount: number
   lastUpdated: string
+  image?: string
 }
 
 interface ProjectListProps {
@@ -19,22 +20,10 @@ export function ProjectList({ projects, username }: ProjectListProps) {
       <h3 className="pb-4 font-mono" id="projects">
         Projects
       </h3>
-      <div>
-        <div className="flex flex-col space-y-6">
-          {projects.map((project) => (
-            <ThreadCard
-              key={project.id}
-              thread={{
-                id: project.id,
-                title: project.title,
-                date: project.lastUpdated,
-                teaser: project.description,
-              }}
-              username={username}
-              projectId={project.id.toString()}
-            />
-          ))}
-        </div>
+      <div className="flex flex-col space-y-6">
+        {projects.map((project) => (
+          <ProjectCard key={project.id} project={project} username={username} />
+        ))}
       </div>
     </div>
   )
