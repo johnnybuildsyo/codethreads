@@ -1,6 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarDays } from "lucide-react"
-import Link from "next/link"
 import Header from "@/components/header"
 import { ThreadCard } from "@/components/thread-card"
 
@@ -79,8 +76,23 @@ const projectData = {
   ],
 }
 
-export default function ProjectPage({ params }: { params: { username: string; projectId: string } }) {
-  const project = projectData
+interface ProjectPageProps {
+  params: Promise<{
+    username: string
+    projectId: string
+  }>
+}
+
+async function getProjectData(username: string, projectId: string) {
+  // In a real app, this would be a database query
+  // Simulating async data fetch
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  return projectData
+}
+
+export default async function ProjectPage({ params }: ProjectPageProps) {
+  const { username, projectId } = await params
+  const project = await getProjectData(username, projectId)
   const user = project.creator
   const [featuredThread, ...otherThreads] = project.threads
 
@@ -97,10 +109,10 @@ export default function ProjectPage({ params }: { params: { username: string; pr
           <p className="text-muted-foreground">{project.description}</p>
         </div>
         <div className="space-y-6">
-          <ThreadCard thread={featuredThread} username={params.username} projectId={params.projectId} featured={true} />
+          <ThreadCard thread={featuredThread} username={username} projectId={projectId} featured={true} />
 
           {otherThreads.map((thread) => (
-            <ThreadCard key={thread.id} thread={thread} username={params.username} projectId={params.projectId} />
+            <ThreadCard key={thread.id} thread={thread} username={username} projectId={projectId} />
           ))}
         </div>
       </main>
