@@ -127,21 +127,9 @@ export default function ThreadPage({ params }: { params: { username: string; pro
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{thread.title}</h1>
           <div className="flex items-center space-x-4">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>
-                {user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-sm text-muted-foreground">@{user.username}</p>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
+            <div className="flex items-center space-x-4 mb-6 font-mono text-xs">
+              <p className="font-medium">{user.name}</p>
+              <p className="text-muted-foreground">@{user.username}</p>
               <span>{thread.date}</span>
             </div>
           </div>

@@ -46,7 +46,7 @@ export default function UserPage({ params }: { params: { username: string } }) {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-3">
           <Card className="md:col-span-1">
             <CardHeader>
               <div className="flex items-center space-x-4">
@@ -83,32 +83,31 @@ export default function UserPage({ params }: { params: { username: string } }) {
               </div>
             </CardContent>
           </Card>
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle id="projects">Projects</CardTitle>
-              <CardDescription>Check out {user.name}'s latest projects and coding threads</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+          <div className="md:col-span-2">
+            <h3 className="pb-4 font-mono" id="projects">
+              Projects
+            </h3>
+            <div>
+              <div className="flex flex-col space-y-6">
                 {user.projects.map((project) => (
-                  <Card key={project.id}>
-                    <CardHeader>
-                      <Link href={`/${user.username}/${project.id}`}>
-                        <CardTitle className="hover:underline cursor-pointer">{project.title}</CardTitle>
-                      </Link>
-                      <CardDescription>{project.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>{project.threadCount} threads</span>
-                        <span>Last updated: {project.lastUpdated}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Link key={project.id} href={`/${user.username}/${project.id}`}>
+                    <Card className="transition-colors hover:bg-muted/50">
+                      <CardHeader>
+                        <CardTitle>{project.title}</CardTitle>
+                        <CardDescription>{project.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-between text-xs text-muted-foreground font-mono">
+                          <span>{project.threadCount} threads</span>
+                          <span>{project.lastUpdated}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </main>
     </div>

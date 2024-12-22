@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDays } from "lucide-react"
 import Link from "next/link"
@@ -54,22 +53,11 @@ export default function ProjectPage({ params }: { params: { username: string; pr
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
-          <p className="text-muted-foreground">{project.description}</p>
-        </div>
-        <div className="flex items-center space-x-4 mb-6">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>
-              {user.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium">{user.name}</p>
-            <p className="text-sm text-muted-foreground">@{user.username}</p>
+          <div className="flex items-center space-x-4 mb-6 font-mono text-xs">
+            <p className="font-medium">{user.name}</p>
+            <p className="text-muted-foreground">@{user.username}</p>
           </div>
+          <p className="text-muted-foreground">{project.description}</p>
         </div>
         <div className="space-y-4">
           {project.threads.map((thread) => (
