@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
+import { ThreadCard } from "@/components/thread-card"
 
 // This would typically come from a database or API
 const projectData = {
@@ -47,6 +48,21 @@ const projectData = {
       title: "📚 Storybook integration complete - here's what I learned",
       date: "2023-06-10",
       teaser: "Finally got Storybook up and running smoothly. Here's a quick rundown of the challenges and wins.",
+      firstPost: {
+        content:
+          "After a week of wrestling with configurations and custom webpack setups, I finally got our Storybook integration working smoothly! 📚✨ The components are now properly documented and we have a living style guide.",
+        timestamp: "2023-06-10T15:20:00Z",
+        commit: {
+          message: "Add Storybook configuration and initial stories",
+          diff: `diff --git a/.storybook/main.js b/.storybook/main.js
++module.exports = {
++  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
++  addons: ['@storybook/addon-links', '@storybook/addon-essentials'],
++  framework: '@storybook/react',
++  core: { builder: '@storybook/builder-webpack5' },
++};`,
+        },
+      },
     },
     {
       id: 3,
@@ -80,70 +96,11 @@ export default function ProjectPage({ params }: { params: { username: string; pr
           </div>
           <p className="text-muted-foreground">{project.description}</p>
         </div>
-        <Link href={`/${params.username}/${params.projectId}/thread/${featuredThread.id}`} className="block mb-8">
-          <Card className="transition-shadow hover:shadow-md border-2">
-            <CardHeader>
-              <CardTitle className="text-2xl">{featuredThread.title}</CardTitle>
-              <CardDescription className="text-sm flex items-center space-x-2">
-                <CalendarDays className="h-3 w-3" />
-                <span>{featuredThread.date}</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-base text-muted-foreground mb-6">{featuredThread.firstPost.content}</p>
-              {featuredThread.firstPost.commit && (
-                <div className="bg-muted rounded-md mb-6 overflow-hidden">
-                  <div className="bg-muted/50 px-4 py-2 border-b">
-                    <h3 className="font-mono text-sm">
-                      <span className="text-muted-foreground">Commit:</span> {featuredThread.firstPost.commit.message}
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <pre className="text-xs leading-relaxed">
-                      <code className="block p-4">
-                        {featuredThread.firstPost.commit.diff.split("\n").map((line, i) => {
-                          let lineClass = "block"
-                          if (line.startsWith("+")) {
-                            lineClass += " bg-green-500/10 text-green-700"
-                          } else if (line.startsWith("-")) {
-                            lineClass += " bg-red-500/10 text-red-700"
-                          } else if (line.startsWith("@")) {
-                            lineClass += " bg-blue-500/10 text-blue-700"
-                          }
-                          return (
-                            <span key={i} className={lineClass}>
-                              {line}
-                            </span>
-                          )
-                        })}
-                      </code>
-                    </pre>
-                  </div>
-                </div>
-              )}
-              <p className="text-sm text-primary hover:underline">Read full thread →</p>
-            </CardContent>
-          </Card>
-        </Link>
+        <div className="space-y-6">
+          <ThreadCard thread={featuredThread} username={params.username} projectId={params.projectId} featured={true} />
 
-        {/* Other Threads */}
-        <div className="space-y-4">
           {otherThreads.map((thread) => (
-            <Link key={thread.id} href={`/${params.username}/${params.projectId}/thread/${thread.id}`} className="block hover:no-underline">
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-lg">{thread.title}</CardTitle>
-                  <CardDescription className="text-sm flex items-center space-x-2">
-                    <CalendarDays className="h-3 w-3" />
-                    <span>{thread.date}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">{thread.teaser}</p>
-                  <p className="text-sm text-primary hover:underline">Read more...</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <ThreadCard key={thread.id} thread={thread} username={params.username} projectId={params.projectId} />
           ))}
         </div>
       </main>
