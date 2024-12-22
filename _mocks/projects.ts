@@ -4,6 +4,13 @@ export const projectData = {
   description: "A collection of reusable React components with Storybook integration.",
   threadCount: 15,
   lastUpdated: "2023-06-15",
+  createdAt: "2023-06-01",
+  stats: {
+    stars: 1247,
+    forks: 123,
+    watchers: 45,
+    commits: 342,
+  },
   creator: {
     username: "sarahdev",
     name: "Sarah Developer",

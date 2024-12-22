@@ -25,7 +25,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{thread.title}</h1>
           <div className="flex items-center space-x-4">
