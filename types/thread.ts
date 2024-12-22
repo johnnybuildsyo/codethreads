@@ -1,7 +1,8 @@
 export interface ThreadPost {
+  id: number
   content: string
   timestamp: string
-  commit?: {
+  commit: {
     message: string
     diff: string
   }
@@ -12,7 +13,7 @@ export interface Thread {
   title: string
   date: string
   teaser: string
-  firstPost?: ThreadPost
+  posts: ThreadPost[]
 }
 
 export interface ThreadCardProps {

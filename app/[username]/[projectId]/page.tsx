@@ -104,7 +104,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
           <p className="text-muted-foreground">{project.description}</p>
         </div>
-        <div className="space-y-6">
+        <div className="space-y-2">
           <ThreadCard thread={project.threads[0]} username={username} projectId={projectId} featured={true} />
 
           {project.threads.slice(1).map((thread) => (

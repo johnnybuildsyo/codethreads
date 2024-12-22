@@ -16,17 +16,25 @@ export function ThreadCard({ thread, username, projectId, featured = false }: Th
         <div className={cn("font-medium", featured ? "text-2xl" : "text-lg")}>{thread.title}</div>
         <div className="text-xs font-mono flex items-center space-x-2 pb-2">
           <span>{thread.date}</span>
+          <span>·</span>
+          <span>{thread.posts.length} commits</span>
         </div>
       </div>
       <div>
-        {isExpanded && thread.firstPost ? <ThreadContent post={thread.firstPost} /> : <p className="text-sm text-muted-foreground mb-6">{thread.teaser}</p>}
-        <div className="flex items-center justify-between">
-          {thread.firstPost && (
-            <button onClick={() => setIsExpanded(!isExpanded)} className="text-sm text-primary hover:underline flex items-center space-x-1">
-              <span>{isExpanded ? "Show less" : "Read full thread"}</span>
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-          )}
+        {isExpanded ? (
+          <div className="space-y-6">
+            {thread.posts.map((post) => (
+              <ThreadContent key={post.id} post={post} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{thread.teaser}</p>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <button onClick={() => setIsExpanded(!isExpanded)} className="text-sm text-primary flex items-center space-x-1">
+            <span>[{isExpanded ? "-" : "+"}]</span>
+            <span>{isExpanded ? "Close thread" : "Open thread"}</span>
+          </button>
           <Link href={`/${username}/${projectId}/thread/${thread.id}`} className="text-xs font-mono text-muted-foreground hover:text-primary hover:underline">
             Permalink →
           </Link>

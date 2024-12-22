@@ -1,7 +1,8 @@
 export const threadData = {
   id: 1,
-  title: "🎨 Nailed it! Our new color system is a game-changer for accessibility",
+  title: "🎨 Our new color system is a game-changer for accessibility",
   date: "2023-06-15",
+  teaser: "Just pushed some major updates to our color system. You won't believe the impact on accessibility scores!",
   creator: {
     username: "sarahdev",
     name: "Sarah Developer",
