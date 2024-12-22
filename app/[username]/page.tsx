@@ -6,8 +6,15 @@ import Header from "@/components/header"
 import { usersData } from "@/_mocks/users"
 import { mockRepos } from "@/_mocks/repos"
 
-export default function UserPage({ params }: { params: { username: string } }) {
-  const userData = usersData[params.username as keyof typeof usersData]
+interface UserPageProps {
+  params: Promise<{
+    username: string
+  }>
+}
+
+export default async function UserPage({ params }: UserPageProps) {
+  const { username } = await params
+  const userData = usersData[username as keyof typeof usersData]
   const isExistingUser = Boolean(userData)
   const hasProjects = userData?.projects.length > 0
 
@@ -15,7 +22,7 @@ export default function UserPage({ params }: { params: { username: string } }) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <UserSignup username={params.username} />
+        <UserSignup username={username} />
       </div>
     )
   }
@@ -24,7 +31,7 @@ export default function UserPage({ params }: { params: { username: string } }) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <ProjectImportContainer username={params.username} repos={mockRepos} />
+        <ProjectImportContainer username={username} repos={mockRepos} />
       </div>
     )
   }
