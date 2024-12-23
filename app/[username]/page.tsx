@@ -1,6 +1,5 @@
 import { UserProfileCard } from "@/components/users/user-profile-card"
 import { ProjectList } from "@/components/projects/project-list"
-import { UserSignup } from "@/components/auth/user-signup"
 import { ProjectImportContainer } from "@/components/projects/project-import-container"
 import Header from "@/components/layout/header"
 import { usersData } from "@/_mocks/users"
@@ -15,17 +14,7 @@ interface UserPageProps {
 export default async function UserPage({ params }: UserPageProps) {
   const { username } = await params
   const userData = usersData[username as keyof typeof usersData]
-  const isExistingUser = Boolean(userData)
   const hasProjects = userData?.projects.length > 0
-
-  if (!isExistingUser) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <UserSignup username={username} />
-      </div>
-    )
-  }
 
   if (!hasProjects) {
     return (

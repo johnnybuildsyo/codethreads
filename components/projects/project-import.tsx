@@ -32,7 +32,7 @@ export function ProjectImport({ repos, onProjectSelect, isCreating = false }: Pr
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Import Your First Project</CardTitle>
-          <CardDescription className="text-lg mt-2">Select a GitHub repository to start documenting your progress</CardDescription>
+          <CardDescription className="text-lg mt-2">Select a GitHub repository to start your first Code Thread</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <RadioGroup className="space-y-4" onValueChange={(value) => setSelectedRepo(Number(value))} disabled={isCreating}>
