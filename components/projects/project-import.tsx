@@ -15,56 +15,61 @@ interface ProjectImportProps {
   isCreating: boolean
 }
 
-export function ProjectImport({ repos, onProjectSelect, isCreating = false }: ProjectImportProps) {
+export function ProjectImport({ repos, onProjectSelect, isCreating }: ProjectImportProps) {
   const [selectedRepo, setSelectedRepo] = useState<number | null>(null)
+
+  const selectedRepoData = selectedRepo ? repos.find((repo) => repo.id === selectedRepo) : null
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-3xl">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Import Your First Project</CardTitle>
-          <CardDescription className="text-lg mt-2">Select a GitHub repository to start your first Code Thread</CardDescription>
+          <CardDescription className="text-lg mt-2">{selectedRepo ? "Create your first Code Thread" : "Select a GitHub repository to start your first Code Thread"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <RadioGroup className="space-y-4" onValueChange={(value) => setSelectedRepo(Number(value))} disabled={isCreating}>
-            {repos.map((repo) => (
-              <div key={repo.id} className="flex items-start space-x-3">
-                <RadioGroupItem value={repo.id.toString()} id={repo.id.toString()} className="mt-1" />
-                <Label htmlFor={repo.id.toString()} className="flex-1 cursor-pointer">
-                  <Card className={`transition-colors hover:bg-muted/50 ${selectedRepo === repo.id ? "border-primary" : ""}`}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold">{repo.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{repo.description}</p>
+          <div className="space-y-4">
+            {(selectedRepo ? [selectedRepoData] : repos).map(
+              (repo) =>
+                repo && (
+                  <div key={repo.id} className="cursor-pointer" onClick={() => setSelectedRepo(repo.id)}>
+                    <Card className={`transition-colors hover:bg-muted/50 ${selectedRepo === repo.id ? "border-primary" : ""}`}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold">{repo.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">{repo.description}</p>
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span className="flex items-center">
+                              <Star className="h-4 w-4 mr-1" />
+                              {repo.stars}
+                            </span>
+                            <span className="flex items-center">
+                              <GitFork className="h-4 w-4 mr-1" />
+                              {repo.forks}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span className="flex items-center">
-                            <Star className="h-4 w-4 mr-1" />
-                            {repo.stars}
-                          </span>
-                          <span className="flex items-center">
-                            <GitFork className="h-4 w-4 mr-1" />
-                            {repo.forks}
-                          </span>
+                        <div className="flex items-center space-x-4 mt-4 text-xs">
+                          <span className="text-muted-foreground">Last updated: {new Date(repo.updated_at).toLocaleDateString()}</span>
+                          <span className="font-mono">{repo.language}</span>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-4 mt-4 text-xs">
-                        <span className="text-muted-foreground">Last updated: {new Date(repo.updated_at).toLocaleDateString()}</span>
-                        <span className="font-mono">{repo.language}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-          <div className="flex justify-end">
+                      </CardContent>
+                    </Card>
+                  </div>
+                )
+            )}
+          </div>
+          <div className="flex justify-end space-x-4">
+            {selectedRepo && (
+              <Button variant="ghost" onClick={() => setSelectedRepo(null)}>
+                Go Back
+              </Button>
+            )}
             <Button size="lg" disabled={!selectedRepo || isCreating} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
               {isCreating ? (
-                <>
-                  <span className="animate-pulse">Creating Thread...</span>
-                </>
+                <span className="animate-pulse">Creating Thread...</span>
               ) : (
                 <>
                   Start Code Thread
