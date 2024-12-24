@@ -13,22 +13,42 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    async function getSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
-      setIsLoading(false)
-    })
 
-    // Listen for auth changes
+      if (session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("username").eq("id", session.user.id).single()
+
+        setProfile(profile)
+      }
+
+      setIsLoading(false)
+    }
+
+    getSession()
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
+
+      if (session?.user) {
+        const { data: profile } = await supabase.from("profiles").select("username").eq("id", session.user.id).single()
+
+        setProfile(profile)
+      } else {
+        setProfile(null)
+      }
+
       setIsLoading(false)
     })
 
@@ -83,16 +103,16 @@ export default function Header() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal" asChild>
-                      <Link href={`/${user.user_metadata.preferred_username}`} className="cursor-pointer">
+                      <Link href={`/${profile?.username}`} className="cursor-pointer">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">{user.user_metadata.name}</p>
-                          <p className="text-xs leading-none text-muted-foreground">@{user.user_metadata.preferred_username}</p>
+                          <p className="text-xs leading-none text-muted-foreground">@{profile?.username}</p>
                         </div>
                       </Link>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={`/${user.user_metadata.preferred_username}`}>My Profile</Link>
+                      <Link href={`/${profile?.username}`}>My Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
