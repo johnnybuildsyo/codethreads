@@ -4,6 +4,8 @@ import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { CommitManager } from "@/components/projects/commit-manager"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -146,6 +148,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
+          <div className="mt-4">
+            <CommitManager projectId={project.id} fullName={project.full_name} />
+          </div>
         </div>
         {/* Thread list will be added later */}
       </main>
