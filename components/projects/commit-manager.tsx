@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { ChevronLeft, ChevronRight, Github } from "lucide-react"
 import { signInWithGitHub } from "@/components/auth/actions"
-import { ThreadEditor } from "@/components/threads/thread-editor"
+import { useRouter } from "next/navigation"
 
 interface Commit {
   sha: string
@@ -28,6 +28,7 @@ interface CommitManagerProps {
 const COMMITS_PER_PAGE = 5
 
 export function CommitManager({ projectId, fullName, isOwner }: CommitManagerProps) {
+  const router = useRouter()
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -48,7 +49,7 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
-      setSelectedCommit(commit)
+      router.push(`${window.location.pathname}/thread/new?commit=${commit.sha}`)
     }
     console.log(`Processing commit ${commit.sha} with action: ${action}`)
     console.log({ commit })
@@ -131,10 +132,6 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   const pageEnd = pageStart + COMMITS_PER_PAGE
   const currentPageCommits = commits.slice(pageStart, pageEnd)
   const totalPages = Math.ceil(commits.length / COMMITS_PER_PAGE)
-
-  if (selectedCommit) {
-    return <ThreadEditor projectId={projectId} commit={selectedCommit} fullName={fullName} onClose={() => setSelectedCommit(null)} />
-  }
 
   return (
     <div className="space-y-6 border-t pt-4">
