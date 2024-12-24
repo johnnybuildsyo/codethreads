@@ -80,11 +80,13 @@ export default function Header() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.user_metadata.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">@{user.user_metadata.preferred_username}</p>
-                      </div>
+                    <DropdownMenuLabel className="font-normal" asChild>
+                      <Link href={`/${user.user_metadata.preferred_username}`} className="cursor-pointer">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.user_metadata.name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">@{user.user_metadata.preferred_username}</p>
+                        </div>
+                      </Link>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
