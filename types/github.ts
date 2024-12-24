@@ -17,4 +17,16 @@ export interface Project {
   owner_id: string
   created_at: string
   updated_at: string
+}
+
+export interface Commit {
+  sha: string
+  commit: {
+    message: string
+    author: {
+      name: string
+      email: string
+      date: string
+    }
+  }
 } 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { ChevronLeft, ChevronRight, Github } from "lucide-react"
 import { signInWithGitHub } from "@/components/auth/actions"
+import { ThreadEditor } from "@/components/threads/thread-editor"
 
 interface Commit {
   sha: string
@@ -32,6 +33,7 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   const [page, setPage] = useState(0)
   const [session, setSession] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -45,6 +47,9 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   }, [fullName])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
+    if (action === "new") {
+      setSelectedCommit(commit)
+    }
     console.log(`Processing commit ${commit.sha} with action: ${action}`)
     console.log({ commit })
     // TODO: Process the commit based on action
@@ -126,6 +131,10 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   const pageEnd = pageStart + COMMITS_PER_PAGE
   const currentPageCommits = commits.slice(pageStart, pageEnd)
   const totalPages = Math.ceil(commits.length / COMMITS_PER_PAGE)
+
+  if (selectedCommit) {
+    return <ThreadEditor projectId={projectId} commit={selectedCommit} onClose={() => setSelectedCommit(null)} />
+  }
 
   return (
     <div className="space-y-6 border-t pt-4">

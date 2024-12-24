@@ -11,7 +11,7 @@ interface UserPageProps {
 }
 
 export default async function UserPage({ params }: UserPageProps) {
-  const { username } = params
+  const { username } = await params
   const supabase = await createClient()
 
   // Get current session
@@ -47,9 +47,6 @@ export default async function UserPage({ params }: UserPageProps) {
 
   // Check if current user owns this profile using ID
   const isCurrentUser = session?.user?.id === profile.id
-
-  // Log for debugging
-  console.log("Searching for username:", username)
 
   // Show project import only if it's the current user's profile and they have no projects
   if (isCurrentUser && profile.projects?.length === 0) {
