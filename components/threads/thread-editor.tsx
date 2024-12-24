@@ -29,6 +29,7 @@ export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEdi
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [summary, setSummary] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
 
@@ -47,7 +48,6 @@ export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEdi
     const supabase = createClient()
 
     try {
-      // Create thread
       const { data: thread, error: threadError } = await supabase
         .from("threads")
         .insert({
@@ -60,10 +60,9 @@ export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEdi
 
       if (threadError) throw threadError
 
-      // Create post with commit
       const { error: postError } = await supabase.from("posts").insert({
         thread_id: thread.id,
-        content,
+        content: `${content}\n\n${summary}`,
         commit_sha: commit.sha,
       })
 
@@ -87,6 +86,8 @@ export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEdi
       </div>
 
       <Input className="!text-xl" placeholder="Thread title" value={title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} />
+
+      <Textarea placeholder="Introduce the changes you're making..." value={content} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)} rows={3} />
 
       <div className="space-y-4">
         {files.map((file, i) => (
@@ -117,13 +118,13 @@ export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEdi
         ))}
       </div>
 
-      <Textarea placeholder="What's significant about this commit?" value={content} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)} rows={5} />
+      <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSummary(e.target.value)} rows={3} />
 
       <div className="flex justify-end space-x-2">
         <Button variant="ghost" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={!title || !content || isSubmitting}>
+        <Button onClick={handleSubmit} disabled={!title || !content || !summary || isSubmitting}>
           {isSubmitting ? "Creating..." : "Create Thread"}
         </Button>
       </div>
