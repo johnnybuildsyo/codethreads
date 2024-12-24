@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
-import { ChevronLeft, ChevronRight, Moon, Sun, Zap, ChevronDown } from "lucide-react"
+import { Moon, Sun, ChevronDown } from "lucide-react"
 import LogoIcon from "../graphics/logo-icon"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -34,6 +34,8 @@ export default function Header() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  console.log("Header", { user })
 
   return (
     <header className="py-4 px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full h-20 border-b border-foreground/10">

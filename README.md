@@ -1,42 +1,44 @@
-Minimal [Next.js](https://nextjs.org) starter with ESList and VSCode settings for automatic code formatting, theme provider for light/dark mode, Rethink Sans font, default layout component and shadcn/ui components support.
+# CodeThreads
 
-I’ve created this starter for my #buildinpublic projects. Find out more at [johnnybuilds.com](https://johnnybuilds.com).
+## Setup
 
-## Getting Started
-
-1. **Clone the Repository**
-
+1. Install dependencies:
 ```bash
-git clone https://github.com/johnnybuildsyo/johnnybuilds-nextjs-starter
-```
-
-2. **Rename the Project**
-
-```bash
-mv johnnybuilds-nextjs-starter your-new-project-name
-```
-
-3. **Install Dependencies**
-
-```bash
-cd your-new-project-name
-npm install
-# or
-yarn install
-# or
 pnpm install
 ```
 
-4. **Run the Development Server**
-
+2. Start Supabase locally:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm supabase start
+```
+
+3. Reset database and generate types:
+```bash
+pnpm db:dev
+```
+
+## Running locally
+
+1. Start the development server:
+```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development Commands
+
+- Reset database: `pnpm db:local:reset`
+- Generate types: `pnpm db:local:types`
+- Create new migration: `pnpm db:local:new <migration_name>`
+- Check Supabase status: `pnpm db:local:status`
+
+## Environment Variables
+
+Make sure you have the following in your `.env.local`:
+```bash
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
+```

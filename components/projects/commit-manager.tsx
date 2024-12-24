@@ -21,11 +21,12 @@ interface Commit {
 interface CommitManagerProps {
   projectId: string
   fullName: string
+  isOwner: boolean
 }
 
 const COMMITS_PER_PAGE = 5
 
-export function CommitManager({ projectId, fullName }: CommitManagerProps) {
+export function CommitManager({ projectId, fullName, isOwner }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -45,6 +46,7 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     console.log(`Processing commit ${commit.sha} with action: ${action}`)
+    console.log({ commit })
     // TODO: Process the commit based on action
   }
 
@@ -55,18 +57,11 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
       const supabase = createClient()
       const {
         data: { session },
-        error: sessionError,
       } = await supabase.auth.getSession()
 
-      console.log("Auth debug:", {
-        hasSession: !!session,
-        hasToken: !!session?.provider_token,
-        sessionError,
-        userId: session?.user?.id,
-      })
-
       if (!session?.provider_token) {
-        throw new Error("Not authenticated")
+        setLoading(false)
+        return
       }
 
       const response = await fetch(`/api/github/commits/${fullName}?page=1&per_page=100&sort=created&direction=asc`, {
@@ -95,14 +90,17 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
     }
   }
 
-  if (loading)
+  if (!session) return null
+
+  if (loading) {
     return (
       <div className="text-sm text-muted-foreground">
         Loading commits... <span className="animate-pulse">⋯</span>
       </div>
     )
+  }
 
-  if (!session?.provider_token) {
+  if (!session.provider_token && isOwner) {
     return (
       <div className="text-center p-6 border rounded-lg">
         <p className="text-sm text-muted-foreground mb-4">GitHub authentication required to fetch commits</p>
@@ -118,6 +116,8 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
       </div>
     )
   }
+
+  if (!session.provider_token) return null
 
   if (error) return <div className="text-sm text-red-500">Error: {error}</div>
   if (commits.length === 0) return <div className="text-sm text-muted-foreground">No commits found</div>

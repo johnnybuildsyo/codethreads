@@ -1,5 +1,5 @@
 import Header from "@/components/layout/header"
-import { User, Star, GitFork, Eye, GitCommit, Calendar, Github } from "lucide-react"
+import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
@@ -89,6 +89,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   const stats = session?.provider_token && project.full_name ? await getGitHubStats(project.full_name, session.provider_token) : null
 
+  const isOwner = session?.user?.id === project.owner_id
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -108,6 +110,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             >
               <Github className="h-3 w-3" />
               <span>{project.full_name}</span>
+              <ExternalLink className="h-3 w-3" />
             </Link>
             <TooltipProvider>
               <div className="flex items-center space-x-4 font-mono text-xs text-muted-foreground">
@@ -178,7 +181,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
           <p className="text-muted-foreground">{project.description}</p>
           <div className="mt-4">
-            <CommitManager projectId={project.id} fullName={project.full_name} />
+            <CommitManager projectId={project.id} fullName={project.full_name} isOwner={isOwner} />
           </div>
         </div>
         {/* Thread list will be added later */}
