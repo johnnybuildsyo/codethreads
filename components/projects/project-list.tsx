@@ -2,15 +2,7 @@ import { ProjectCard } from "./project-card"
 import { PlusCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-
-interface Project {
-  id: number
-  title: string
-  description: string
-  threadCount: number
-  lastUpdated: string
-  image?: string
-}
+import type { Project } from "@/types/github"
 
 interface ProjectListProps {
   projects: Project[]
@@ -50,7 +42,17 @@ export function ProjectList({ projects, username, isCurrentUser }: ProjectListPr
       </h3>
       <div className="flex flex-col space-y-6">
         {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} username={username} />
+          <ProjectCard
+            key={project.id}
+            project={{
+              id: project.id,
+              title: project.name,
+              description: project.description || "",
+              threadCount: 0,
+              lastUpdated: project.updated_at,
+            }}
+            username={username}
+          />
         ))}
       </div>
     </div>

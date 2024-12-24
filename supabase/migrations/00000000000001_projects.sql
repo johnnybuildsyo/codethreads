@@ -4,6 +4,7 @@ create table public.projects (
   name text not null,
   description text,
   owner_id uuid references auth.users(id) not null,
+  profile_id uuid references profiles(id) not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

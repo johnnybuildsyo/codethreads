@@ -70,7 +70,12 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
       const selectedRepo = repos.find((repo) => repo.id === repoId)
       if (!selectedRepo) throw new Error("Repository not found")
 
-      // Create project in database
+      // Get user's profile id first
+      const { data: profile } = await supabase.from("profiles").select("id").eq("username", username).single()
+
+      if (!profile) throw new Error("Profile not found")
+
+      // Create project with profile_id
       const { data: project, error: projectError } = await supabase
         .from("projects")
         .insert({
@@ -78,6 +83,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
           name: selectedRepo.name,
           description: selectedRepo.description,
           owner_id: (await supabase.auth.getUser()).data.user?.id,
+          profile_id: profile.id,
         })
         .select()
         .single()

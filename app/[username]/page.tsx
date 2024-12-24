@@ -20,8 +20,23 @@ export default async function UserPage({ params }: UserPageProps) {
   } = await supabase.auth.getSession()
   const isCurrentUser = session?.user?.user_metadata?.preferred_username === username
 
-  // Get profile from database
-  const { data: profile } = await supabase.from("profiles").select("*").eq("username", username).single()
+  // Log for debugging
+  console.log("Searching for username:", username)
+
+  // Get profile and projects from database
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select(
+      `
+      *,
+      projects (*)
+    `
+    )
+    .eq("username", username)
+    .single()
+
+  // Log results
+  console.log("Profile query result:", { profile, error })
 
   if (!profile) {
     return (

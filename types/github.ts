@@ -1,9 +1,9 @@
-export interface GithubRepo {
-  id: number
+export interface Project {
+  id: string
+  github_id: number
   name: string
-  description: string
-  stars: number
-  forks: number
-  language: string | null
+  description: string | null
+  owner_id: string
+  created_at: string
   updated_at: string
 } 

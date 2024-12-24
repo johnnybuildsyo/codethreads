@@ -3,7 +3,7 @@ import { CalendarDays } from "lucide-react"
 import Link from "next/link"
 
 interface Project {
-  id: number
+  id: string
   title: string
   description: string
   threadCount: number
