@@ -133,7 +133,7 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   const totalPages = Math.ceil(commits.length / COMMITS_PER_PAGE)
 
   if (selectedCommit) {
-    return <ThreadEditor projectId={projectId} commit={selectedCommit} onClose={() => setSelectedCommit(null)} />
+    return <ThreadEditor projectId={projectId} commit={selectedCommit} fullName={fullName} onClose={() => setSelectedCommit(null)} />
   }
 
   return (

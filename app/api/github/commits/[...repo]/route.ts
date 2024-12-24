@@ -9,15 +9,19 @@ export async function GET(request: Request, { params }: { params: { repo: string
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const [owner, repo] = params.repo
+  const { repo } = await params;
+  const [owner, repository] = repo;
   const { searchParams } = new URL(request.url)
   const page = searchParams.get('page') || '1'
   const per_page = searchParams.get('per_page') || '30'
   const sort = searchParams.get('sort') || 'created'
   const direction = searchParams.get('direction') || 'asc'
 
+  const apiUrl = `https://api.github.com/repos/${owner}/${repository}/commits?page=${page}&per_page=${per_page}&sort=${sort}&direction=${direction}` 
+  console.log(apiUrl)
+
   const response = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/commits?page=${page}&per_page=${per_page}&sort=${sort}&direction=${direction}`,
+    apiUrl,
     {
       headers: {
         Authorization: `Bearer ${session.provider_token}`,

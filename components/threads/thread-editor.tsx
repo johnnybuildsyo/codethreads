@@ -1,22 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
 import type { Commit } from "@/types/github"
+import DiffViewer from "react-diff-viewer-continued"
+import { useTheme } from "next-themes"
 
 interface ThreadEditorProps {
   projectId: string
   commit: Commit
+  fullName: string
   onClose: () => void
 }
 
-export function ThreadEditor({ projectId, commit, onClose }: ThreadEditorProps) {
+interface FileChange {
+  filename: string
+  status: string
+  additions: number
+  deletions: number
+  oldValue: string
+  newValue: string
+}
+
+export function ThreadEditor({ projectId, commit, fullName, onClose }: ThreadEditorProps) {
+  const { theme } = useTheme()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [files, setFiles] = useState<FileChange[]>([])
+
+  // Fetch diff when component mounts
+  useEffect(() => {
+    async function fetchDiff() {
+      const response = await fetch(`/api/github/commits/${commit.sha}/diff?repo=${encodeURIComponent(fullName)}`)
+      const data = await response.json()
+      setFiles(data)
+    }
+    fetchDiff()
+  }, [commit.sha, fullName])
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
@@ -62,7 +86,36 @@ export function ThreadEditor({ projectId, commit, onClose }: ThreadEditorProps) 
         </p>
       </div>
 
-      <Input placeholder="Thread title" value={title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} />
+      <Input className="!text-xl" placeholder="Thread title" value={title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} />
+
+      <div className="space-y-4">
+        {files.map((file, i) => (
+          <div key={i} className="border rounded-lg p-4 bg-muted/50">
+            <div className="flex justify-between items-center mb-2">
+              <code className="text-xs">{file.filename}</code>
+              <span className="text-xs text-muted-foreground">
+                +{file.additions} -{file.deletions}
+              </span>
+            </div>
+            <div className="max-h-[300px] overflow-auto text-[13px]">
+              <DiffViewer
+                oldValue={file.oldValue}
+                newValue={file.newValue}
+                splitView={false}
+                useDarkTheme={theme === "dark"}
+                hideLineNumbers
+                styles={{
+                  contentText: {
+                    fontSize: "13px",
+                    lineHeight: "1.4",
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                  },
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
 
       <Textarea placeholder="What's significant about this commit?" value={content} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)} rows={5} />
 
