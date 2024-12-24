@@ -11,6 +11,7 @@ import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter } from "next/navigation"
+import { CheckSquare, Square } from "lucide-react"
 
 interface ThreadEditorProps {
   projectId: string
@@ -73,6 +74,7 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"write" | "preview">("write")
   const router = useRouter()
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -80,9 +82,23 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
       const response = await fetch(`/api/github/commits/${commit.sha}/diff?repo=${encodeURIComponent(fullName)}`)
       const data = await response.json()
       setFiles(data)
+      // By default, select all files
+      setSelectedFiles(new Set(data.map((f: FileChange) => f.filename)))
     }
     fetchDiff()
   }, [commit.sha, fullName])
+
+  const toggleFile = (filename: string) => {
+    const newSelected = new Set(selectedFiles)
+    if (newSelected.has(filename)) {
+      newSelected.delete(filename)
+    } else {
+      newSelected.add(filename)
+    }
+    setSelectedFiles(newSelected)
+  }
+
+  const selectedDiffs = files.filter((f) => selectedFiles.has(f.filename))
 
   const handleCancel = () => {
     router.push(`/${username}/${projectId}`)
@@ -143,15 +159,32 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
 
       {view === "write" ? (
         <>
+          <div className="space-y-2 py-4">
+            <h4 className="text-sm font-medium">Included Commits to Files...</h4>
+            <div className="flex flex-wrap gap-2">
+              {files.map((file) => (
+                <Button
+                  key={file.filename}
+                  variant={selectedFiles.has(file.filename) ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => toggleFile(file.filename)}
+                  className="text-xs flex items-center gap-1.5"
+                >
+                  {selectedFiles.has(file.filename) ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
+                  {file.filename}
+                </Button>
+              ))}
+            </div>
+          </div>
           <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
-          <CommitDiff files={files} theme={theme} />
+          <CommitDiff files={selectedDiffs} theme={theme} />
           <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
         </>
       ) : (
         <div className="prose dark:prose-invert max-w-none">
           <ReactMarkdown>{content || "No introduction yet"}</ReactMarkdown>
           <div className="not-prose">
-            <CommitDiff files={files} theme={theme} />
+            <CommitDiff files={selectedDiffs} theme={theme} />
           </div>
           <ReactMarkdown>{summary || "No summary yet"}</ReactMarkdown>
         </div>
