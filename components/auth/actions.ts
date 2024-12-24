@@ -11,6 +11,7 @@ export async function signInWithGitHub() {
       provider: "github",
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        scopes: 'repo read:user'
       },
     })
 

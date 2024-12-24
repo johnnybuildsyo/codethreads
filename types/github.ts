@@ -4,6 +4,6 @@ export interface GithubRepo {
   description: string
   stars: number
   forks: number
-  language: string
+  language: string | null
   updated_at: string
 } 

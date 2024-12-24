@@ -1,53 +1,70 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { ProjectImport } from "./project-import"
+import { useState, useEffect } from "react"
 import type { GithubRepo } from "@/types/github"
+import { createClient } from "@/lib/supabase/client"
 
 interface ProjectImportContainerProps {
   username: string
-  repos: GithubRepo[]
 }
 
-export function ProjectImportContainer({ username, repos }: ProjectImportContainerProps) {
-  const router = useRouter()
-  const [isCreating, setIsCreating] = useState(false)
+export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
+  const [repos, setRepos] = useState<GithubRepo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
 
-  const handleProjectSelect = async (repoId: number) => {
-    setIsCreating(true)
+  useEffect(() => {
+    async function fetchRepos() {
+      const supabase = createClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-    // Mock API call to create project
-    try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Find the selected repo
-      const selectedRepo = repos.find((repo) => repo.id === repoId)
-
-      if (!selectedRepo) throw new Error("Repository not found")
-
-      // Mock project creation payload
-      const newProject = {
-        id: repoId,
-        title: selectedRepo.name,
-        description: selectedRepo.description,
-        threadCount: 0,
-        lastUpdated: new Date().toISOString(),
+      if (!session?.provider_token) {
+        setError("GitHub access token not found")
+        setIsLoading(false)
+        return
       }
 
-      // In a real app, this would be an API call to create the project
-      console.log("Creating project:", newProject)
+      try {
+        const response = await fetch("https://api.github.com/user/repos?sort=updated&per_page=100", {
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        })
 
-      // Redirect to the new project page
-      router.push(`/${username}/${repoId}`)
-    } catch (error) {
-      console.error("Failed to create project:", error)
-      // In a real app, we'd show an error message to the user
-    } finally {
-      setIsCreating(false)
+        if (!response.ok) throw new Error("Failed to fetch repositories")
+
+        const data = await response.json()
+        const mappedRepos: GithubRepo[] = data.map((repo: any) => ({
+          id: repo.id,
+          name: repo.name,
+          description: repo.description || "",
+          stars: repo.stargazers_count,
+          forks: repo.forks_count,
+          language: repo.language,
+          updated_at: repo.updated_at,
+        }))
+
+        setRepos(mappedRepos)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch repositories")
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    fetchRepos()
+  }, [])
+
+  const handleProjectSelect = async (repoId: number) => {
+    // ... existing project selection logic
   }
 
-  return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={isCreating} />
+  if (isLoading) return <div>Loading repositories...</div>
+  if (error) return <div>Error: {error}</div>
+
+  return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={false} />
 }

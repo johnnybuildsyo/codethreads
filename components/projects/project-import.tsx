@@ -6,22 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { GitFork, Star, ArrowRight } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-
-interface GithubRepo {
-  id: number
-  name: string
-  description: string
-  stars: number
-  forks: number
-  language: string
-  updated_at: string
-}
+import type { GithubRepo } from "@/types/github"
 
 interface ProjectImportProps {
   username: string
   repos: GithubRepo[]
   onProjectSelect: (repoId: number) => void
-  isCreating?: boolean
+  isCreating: boolean
 }
 
 export function ProjectImport({ repos, onProjectSelect, isCreating = false }: ProjectImportProps) {
