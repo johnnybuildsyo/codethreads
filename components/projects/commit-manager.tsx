@@ -116,9 +116,6 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
             <p className="text-sm text-muted-foreground mt-1">{new Date(commit.commit.author.date).toLocaleDateString()}</p>
             <div className="mt-4 flex items-center space-x-2">
               <Button onClick={() => handleAction(commit, "new")}>New Thread</Button>
-              <Button onClick={() => handleAction(commit, "existing")} variant="outline">
-                Add to Thread
-              </Button>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
                 Ignore
               </Button>
@@ -127,15 +124,6 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
         ))}
       </div>
       <p className="text-sm text-muted-foreground">{commits.length} unprocessed commits</p>
-
-      {debugData && (
-        <div className="mt-8 border-t pt-4">
-          <details>
-            <summary className="text-sm font-medium cursor-pointer">Debug: GitHub Commit Data</summary>
-            <pre className="mt-2 p-4 bg-muted rounded-lg overflow-auto text-xs">{JSON.stringify(debugData, null, 2)}</pre>
-          </details>
-        </div>
-      )}
     </div>
   )
 }

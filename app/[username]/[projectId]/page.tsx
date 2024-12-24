@@ -1,5 +1,5 @@
 import Header from "@/components/layout/header"
-import { User, Star, GitFork, Eye, GitCommit, Calendar } from "lucide-react"
+import { User, Star, GitFork, Eye, GitCommit, Calendar, Github } from "lucide-react"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
@@ -96,10 +96,18 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         <div className="mb-6">
           <ProjectNameEditor projectId={project.id} initialName={project.display_name || project.name} className="mb-2" />
           <div className="flex items-center space-x-4 mb-6">
-            <Link href={`/${username}`} className="group inline-flex items-center space-x-2 font-mono text-xs bg-foreground/5 px-2 py-1 rounded-md hover:bg-foreground/10 transition-colors">
+            <Link href={`/${username}`} className="group inline-flex items-center space-x-2 font-mono text-xs border px-2 py-1 rounded-md hover:bg-foreground/5 transition-colors">
               <User className="h-3 w-3" />
               <p className="font-medium">{project.profiles.name}</p>
-              <p className="text-muted-foreground group-hover:text-primary">@{project.profiles.username}</p>
+            </Link>
+            <Link
+              href={`https://github.com/${project.full_name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 font-mono text-xs bg-foreground/5 px-2 py-1 rounded-md hover:bg-foreground/10 transition-colors"
+            >
+              <Github className="h-3 w-3" />
+              <span>{project.full_name}</span>
             </Link>
             <TooltipProvider>
               <div className="flex items-center space-x-4 font-mono text-xs text-muted-foreground">
