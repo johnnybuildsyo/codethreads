@@ -4,14 +4,17 @@ import { ProjectImport } from "./project-import"
 import { useState, useEffect } from "react"
 import type { GithubRepo } from "@/types/github"
 import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 interface ProjectImportContainerProps {
   username: string
 }
 
 export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
+  const router = useRouter()
   const [repos, setRepos] = useState<GithubRepo[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -60,11 +63,38 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
   }, [])
 
   const handleProjectSelect = async (repoId: number) => {
-    // ... existing project selection logic
+    setIsCreating(true)
+    const supabase = createClient()
+
+    try {
+      const selectedRepo = repos.find((repo) => repo.id === repoId)
+      if (!selectedRepo) throw new Error("Repository not found")
+
+      // Create project in database
+      const { data: project, error: projectError } = await supabase
+        .from("projects")
+        .insert({
+          github_id: selectedRepo.id,
+          name: selectedRepo.name,
+          description: selectedRepo.description,
+          owner_id: (await supabase.auth.getUser()).data.user?.id,
+        })
+        .select()
+        .single()
+
+      if (projectError) throw projectError
+
+      // Redirect to the new project page
+      router.push(`/${username}/${project.id}`)
+    } catch (error) {
+      console.error("Failed to create project:", error)
+      setError(error instanceof Error ? error.message : "Failed to create project")
+      setIsCreating(false)
+    }
   }
 
-  if (isLoading) return <div>Loading repositories...</div>
-  if (error) return <div>Error: {error}</div>
+  if (isLoading) return <div className="text-center py-8">Loading repositories...</div>
+  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>
 
-  return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={false} />
+  return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={isCreating} />
 }

@@ -7,7 +7,16 @@
     "build": "next build",
     "start": "next start",
     "go": "git add . && aicommits && git push origin main",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "supabase db push && pnpm db:types",
+    "db:diff": "supabase db diff -f migration",
+    "db:types": "supabase gen types typescript > lib/supabase/database.types.ts",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:local:push": "supabase db push --local",
+    "db:local:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
+    "db:local:reset": "supabase db reset --local"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.2",
