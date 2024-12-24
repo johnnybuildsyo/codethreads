@@ -19,40 +19,46 @@ export default function Header() {
   useEffect(() => {
     const supabase = createClient()
 
-    async function getSession() {
+    async function initAuth() {
+      // Get initial session
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      const currentUser = session?.user
+      setUser(currentUser)
 
-      if (session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("username").eq("id", session.user.id).single()
-
+      if (currentUser) {
+        const { data: profile } = await supabase.from("profiles").select("username").eq("id", currentUser.id).single()
         setProfile(profile)
       }
 
       setIsLoading(false)
+
+      // Set up auth state listener after getting initial session
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const currentUser = session?.user
+        setUser(currentUser)
+
+        if (currentUser) {
+          const { data: profile } = await supabase.from("profiles").select("username").eq("id", currentUser.id).single()
+          setProfile(profile)
+        } else {
+          setProfile(null)
+        }
+
+        setIsLoading(false)
+      })
+
+      return () => subscription.unsubscribe()
     }
 
-    getSession()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
-
-      if (session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("username").eq("id", session.user.id).single()
-
-        setProfile(profile)
-      } else {
-        setProfile(null)
-      }
-
-      setIsLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    // Initialize auth and store cleanup function
+    const cleanup = initAuth()
+    return () => {
+      cleanup.then((unsubscribe) => unsubscribe())
+    }
   }, [])
 
   console.log("Header", { user })
