@@ -16,7 +16,15 @@
     "db:status": "supabase status",
     "db:local:push": "supabase db push --local",
     "db:local:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
-    "db:local:reset": "supabase db reset --local"
+    "db:local:reset": "supabase db reset --local",
+    "db:reset": "docker volume rm supabase_db_codethreads || true && pnpm db:stop && pnpm db:start",
+    "db:restart": "pnpm db:stop && pnpm db:start",
+    "db:clean": "docker volume rm supabase_db_codethreads || true",
+    "db:logs": "supabase logs",
+    "db:migrate": "supabase db diff -f",
+    "db:deploy": "pnpm db:reset && pnpm db:push",
+    "db:remote:push": "supabase db push",
+    "db:check": "supabase db lint"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.2",

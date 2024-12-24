@@ -2,6 +2,7 @@ create table public.projects (
   id uuid default gen_random_uuid() primary key,
   github_id bigint not null,
   name text not null,
+  full_name text not null,
   description text,
   owner_id uuid references auth.users(id) not null,
   profile_id uuid references profiles(id) not null,

@@ -70,9 +70,15 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
       const selectedRepo = repos.find((repo) => repo.id === repoId)
       if (!selectedRepo) throw new Error("Repository not found")
 
-      // Get user's profile id first
-      const { data: profile } = await supabase.from("profiles").select("id").eq("username", username).single()
+      // Get session and profile data
+      const [
+        {
+          data: { session },
+        },
+        { data: profile },
+      ] = await Promise.all([supabase.auth.getSession(), supabase.from("profiles").select("id").eq("username", username).single()])
 
+      if (!session) throw new Error("Not authenticated")
       if (!profile) throw new Error("Profile not found")
 
       // Create project with profile_id
@@ -81,8 +87,9 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
         .insert({
           github_id: selectedRepo.id,
           name: selectedRepo.name,
+          full_name: `${session.user.user_metadata.user_name}/${selectedRepo.name}`,
           description: selectedRepo.description,
-          owner_id: (await supabase.auth.getUser()).data.user?.id,
+          owner_id: session.user.id,
           profile_id: profile.id,
         })
         .select()
@@ -91,7 +98,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
       if (projectError) throw projectError
 
       // Redirect to the new project page
-      router.push(`/${username}/${project.id}`)
+      router.push(`/${username}/${project.name}`)
     } catch (error) {
       console.error("Failed to create project:", error)
       setError(error instanceof Error ? error.message : "Failed to create project")

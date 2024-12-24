@@ -5,6 +5,7 @@ import Link from "next/link"
 interface Project {
   id: string
   title: string
+  name: string
   description: string
   threadCount: number
   lastUpdated: string
@@ -18,7 +19,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, username }: ProjectCardProps) {
   return (
-    <Link href={`/${username}/${project.id}`} className="block hover:no-underline group">
+    <Link href={`/${username}/${project.name}`} className="block hover:no-underline group">
       <Card className="transition-all hover:shadow-md group-hover:border-primary">
         {project.image && (
           <div className="relative w-full h-48 overflow-hidden rounded-t-lg">

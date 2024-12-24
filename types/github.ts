@@ -1,3 +1,13 @@
+export interface GithubRepo {
+  id: number
+  name: string
+  description: string
+  stars: number
+  forks: number
+  language: string | null
+  updated_at: string
+}
+
 export interface Project {
   id: string
   github_id: number
