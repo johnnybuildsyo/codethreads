@@ -18,13 +18,9 @@ export default async function UserPage({ params }: UserPageProps) {
   const {
     data: { session },
   } = await supabase.auth.getSession()
-  const isCurrentUser = session?.user?.user_metadata?.preferred_username === username
-
-  // Log for debugging
-  console.log("Searching for username:", username)
 
   // Get profile and projects from database
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select(
       `
@@ -34,9 +30,6 @@ export default async function UserPage({ params }: UserPageProps) {
     )
     .eq("username", username)
     .single()
-
-  // Log results
-  console.log("Profile query result:", { profile, error })
 
   if (!profile) {
     return (
@@ -51,6 +44,12 @@ export default async function UserPage({ params }: UserPageProps) {
       </div>
     )
   }
+
+  // Check if current user owns this profile using ID
+  const isCurrentUser = session?.user?.id === profile.id
+
+  // Log for debugging
+  console.log("Searching for username:", username)
 
   // Show project import only if it's the current user's profile and they have no projects
   if (isCurrentUser && profile.projects?.length === 0) {
