@@ -53,7 +53,7 @@ export default async function UserPage({ params }: UserPageProps) {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="grid gap-8 md:grid-cols-3">
           <UserProfileCard name={profile.name} username={profile.username} avatar={profile.avatar_url} bio={profile.bio} github={profile.github_username} twitter={profile.twitter_username} />
-          <ProjectList projects={profile.projects || []} username={profile.username} />
+          <ProjectList projects={profile.projects || []} username={profile.username} isCurrentUser={isCurrentUser} />
         </div>
       </main>
     </div>
