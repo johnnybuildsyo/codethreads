@@ -92,9 +92,6 @@ export default function Header() {
                     <DropdownMenuItem asChild>
                       <Link href={`/${user.user_metadata.preferred_username}`}>My Profile</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings">Settings</Link>
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-600 focus:text-red-600"
