@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
-import type { Commit } from "@/types/github"
 import DiffViewer from "react-diff-viewer-continued"
 import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { CheckSquare, Square, X, Plus } from "lucide-react"
 
 interface ThreadEditorProps {
@@ -22,7 +21,6 @@ interface ThreadEditorProps {
     authored_at: string
   }
   fullName: string
-  username: string
 }
 
 interface FileChange {
@@ -40,10 +38,15 @@ interface MarkdownSection {
   afterFile?: string // filename this section follows
 }
 
-const CommitDiff = ({ files, theme }: { files: FileChange[]; theme: string | undefined }) => (
+const CommitDiff = ({ files, theme, onRemove }: { files: FileChange[]; theme: string | undefined; onRemove?: (filename: string) => void }) => (
   <div className="space-y-4">
     {files.map((file, i) => (
-      <div key={i} className="border rounded-lg p-4 bg-muted/50">
+      <div key={i} className="border rounded-lg p-4 bg-muted/50 relative">
+        {onRemove && (
+          <Button variant="ghost" className="absolute -top-4 -right-[50px] h-6 w-6 px-1" onClick={() => onRemove(file.filename)}>
+            <X className="h-4 w-4" />
+          </Button>
+        )}
         <div className="flex justify-between items-center mb-2">
           <code className="text-xs">{file.filename}</code>
           <span className="text-xs text-muted-foreground">
@@ -71,7 +74,7 @@ const CommitDiff = ({ files, theme }: { files: FileChange[]; theme: string | und
   </div>
 )
 
-export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEditorProps) {
+export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
@@ -80,6 +83,7 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"write" | "preview">("write")
   const router = useRouter()
+  const params = useParams()
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [showIntro, setShowIntro] = useState(true)
   const [showSummary, setShowSummary] = useState(true)
@@ -109,8 +113,13 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
 
   const selectedDiffs = files.filter((f) => selectedFiles.has(f.filename))
 
+  const getProjectPath = () => {
+    const { username, projectId } = params
+    return `/${username}/${projectId}`
+  }
+
   const handleCancel = () => {
-    router.push(`/${username}/${projectId}`)
+    router.push(getProjectPath())
   }
 
   const handleSubmit = async () => {
@@ -138,7 +147,7 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
 
       if (postError) throw postError
 
-      router.push(`/${username}/${projectId}`)
+      router.push(getProjectPath())
     } catch (error) {
       console.error("Failed to create thread:", error)
     } finally {
@@ -169,7 +178,7 @@ export function ThreadEditor({ projectId, commit, fullName, username }: ThreadEd
     return selectedDiffs.map((file, i) => (
       <div key={file.filename}>
         <div className="border rounded-lg p-4 bg-muted/50">
-          <CommitDiff files={[file]} theme={theme} />
+          <CommitDiff files={[file]} theme={theme} onRemove={() => toggleFile(file.filename)} />
         </div>
 
         {i < selectedDiffs.length - 1 && !sections.some((s) => s.afterFile === file.filename) && (
