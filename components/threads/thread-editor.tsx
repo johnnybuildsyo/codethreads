@@ -10,11 +10,12 @@ import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { CheckSquare, Square, X, Plus, GripVertical } from "lucide-react"
+import { CheckSquare, Square, X, Plus, GripVertical, Settings2, Sparkles } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 
 interface ThreadEditorProps {
   projectId: string
@@ -120,6 +121,10 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   )
   const [isDragging, setIsDragging] = useState(false)
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai-key") || "")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [showKeyDialog, setShowKeyDialog] = useState(false)
+  const [keyInput, setKeyInput] = useState("")
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -225,18 +230,77 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   }
 
+  const generateThread = async () => {
+    if (!apiKey) return
+    setIsGenerating(true)
+    try {
+      // TODO: Call API to generate thread content
+    } catch (error) {
+      console.error("Failed to generate thread:", error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleKeySubmit = () => {
+    if (keyInput?.startsWith("sk-")) {
+      localStorage.setItem("openai-key", keyInput)
+      setApiKey(keyInput)
+      setShowKeyDialog(false)
+      setKeyInput("")
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Create Thread</h3>
+        <Button variant="outline" size="sm" onClick={() => setShowKeyDialog(true)} className="text-xs">
+          <Sparkles className={`h-4 w-4 ${apiKey ? "text-yellow-500" : "text-muted-foreground"}`} />
+          {apiKey ? "AI Connected" : "Connect AI"}
+        </Button>
       </div>
+
+      <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect OpenAI</DialogTitle>
+            <DialogDescription>Add your API key to enable AI-assisted thread creation</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">OpenAI API Key</label>
+              <Input type="password" placeholder="sk-..." value={keyInput} onChange={(e) => setKeyInput(e.target.value)} autoComplete="off" />
+              <p className="text-xs text-muted-foreground">Your API key is stored locally and never sent to our servers</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowKeyDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleKeySubmit} disabled={!keyInput?.startsWith("sk-")}>
+              Connect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <p className="text-sm text-muted-foreground mb-4">
         Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
       </p>
 
       <div className="flex gap-4 items-center mb-4">
-        <Input className="!text-2xl font-bold" placeholder="Thread title" value={title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} />
+        <Input className="!text-2xl font-bold" placeholder="Thread title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Button variant="outline" onClick={generateThread} disabled={!apiKey || isGenerating}>
+          {isGenerating ? (
+            <span className="animate-pulse">Generating...</span>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Assist
+            </>
+          )}
+        </Button>
         <Tabs value={view} onValueChange={(v) => setView(v as "write" | "preview")}>
           <TabsList>
             <TabsTrigger value="write">Write</TabsTrigger>
