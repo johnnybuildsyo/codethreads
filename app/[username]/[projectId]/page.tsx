@@ -58,7 +58,7 @@ async function getGitHubStats(fullRepoName: string, token: string) {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { username, projectId } = params
+  const { username, projectId } = await params
   const supabase = await createClient()
 
   const [

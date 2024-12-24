@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Github } from "lucide-react"
+import { signInWithGitHub } from "@/components/auth/actions"
 
 interface Commit {
   sha: string
@@ -28,64 +29,98 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
-  const [debugData, setDebugData] = useState<any>(null)
+  const [session, setSession] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchData() {
-      const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.provider_token) return
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+  }, [])
 
-      try {
-        // Get repository info
-        const repoResponse = await fetch(`https://api.github.com/repos/${fullName}`, {
-          headers: {
-            Authorization: `Bearer ${session.provider_token}`,
-            Accept: "application/vnd.github.v3+json",
-          },
-        })
-        const repoData = await repoResponse.json()
-        setDebugData(repoData)
-
-        // Get all commits from GitHub
-        const response = await fetch(`https://api.github.com/repos/${fullName}/commits`, {
-          headers: {
-            Authorization: `Bearer ${session.provider_token}`,
-            Accept: "application/vnd.github.v3+json",
-          },
-        })
-        const allCommits = await response.json()
-        setDebugData(allCommits[0])
-
-        // Get processed commits from our database
-        const { data: processedCommits } = await supabase.from("commits").select("sha").eq("project_id", projectId)
-
-        // Filter out commits that have already been processed and sort by date
-        const processedShas = new Set(processedCommits?.map((c) => c.sha) || [])
-        const unprocessedCommits = allCommits
-          .filter((c: Commit) => !processedShas.has(c.sha))
-          .sort((a: Commit, b: Commit) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
-
-        setCommits(unprocessedCommits)
-      } catch (error) {
-        console.error("Failed to fetch commits:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [fullName, projectId])
+  useEffect(() => {
+    fetchCommits()
+  }, [fullName])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     console.log(`Processing commit ${commit.sha} with action: ${action}`)
     // TODO: Process the commit based on action
   }
 
-  if (loading) return <div className="text-sm text-muted-foreground">Loading commits...</div>
-  if (commits.length === 0) return null
+  const fetchCommits = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const supabase = createClient()
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      console.log("Auth debug:", {
+        hasSession: !!session,
+        hasToken: !!session?.provider_token,
+        sessionError,
+        userId: session?.user?.id,
+      })
+
+      if (!session?.provider_token) {
+        throw new Error("Not authenticated")
+      }
+
+      const response = await fetch(`/api/github/commits/${fullName}?page=1&per_page=100&sort=created&direction=asc`, {
+        headers: {
+          Authorization: `Bearer ${session.provider_token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch commits: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        const sortedCommits = [...data].sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
+        setCommits(sortedCommits)
+      } else {
+        console.error("Unexpected response format:", data)
+        setError("Received invalid data format from server")
+      }
+    } catch (error) {
+      console.error("Error fetching commits:", error)
+      setError(error instanceof Error ? error.message : "Failed to fetch commits")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading)
+    return (
+      <div className="text-sm text-muted-foreground">
+        Loading commits... <span className="animate-pulse">⋯</span>
+      </div>
+    )
+
+  if (!session?.provider_token) {
+    return (
+      <div className="text-center p-6 border rounded-lg">
+        <p className="text-sm text-muted-foreground mb-4">GitHub authentication required to fetch commits</p>
+        <Button
+          onClick={async () => {
+            const url = await signInWithGitHub()
+            if (url) window.location.href = url
+          }}
+        >
+          <Github className="mr-2 h-4 w-4" />
+          Connect GitHub
+        </Button>
+      </div>
+    )
+  }
+
+  if (error) return <div className="text-sm text-red-500">Error: {error}</div>
+  if (commits.length === 0) return <div className="text-sm text-muted-foreground">No commits found</div>
 
   const pageStart = page * COMMITS_PER_PAGE
   const pageEnd = pageStart + COMMITS_PER_PAGE

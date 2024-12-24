@@ -5,13 +5,13 @@ import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
 
 interface UserPageProps {
-  params: Promise<{
+  params: {
     username: string
-  }>
+  }
 }
 
 export default async function UserPage({ params }: UserPageProps) {
-  const { username } = await params
+  const { username } = params
   const supabase = await createClient()
 
   // Get current session
