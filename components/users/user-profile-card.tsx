@@ -4,27 +4,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Github, Twitter } from "lucide-react"
 import Link from "next/link"
 
-interface UserProfileProps {
-  name: string
+interface UserProfileCardProps {
+  name: string | null
   username: string
-  avatar: string
-  bio: string
-  github: string
-  twitter: string
+  avatar: string | null
+  bio: string | null
+  github: string | null
+  twitter: string | null
 }
 
-export function UserProfileCard({ name, username, avatar, bio, github, twitter }: UserProfileProps) {
+export function UserProfileCard({ name, username, avatar, bio, github, twitter }: UserProfileCardProps) {
   return (
     <Card className="md:col-span-1">
       <CardHeader>
         <div className="flex items-center space-x-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={avatar} alt={name} />
+            <AvatarImage src={avatar || undefined} alt={name || undefined} />
             <AvatarFallback>
               {name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
+                ?.split(" ")
+                .map((n) => n?.[0])
+                .join("") || username[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
