@@ -34,10 +34,12 @@ export function ProjectNameEditor({ projectId, initialName, className }: Project
 
   if (!isEditing) {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
-        <h1 className="text-3xl font-bold">{displayName}</h1>
-        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-          <Pencil className="h-4 w-4" />
+      <div className={className}>
+        <Button variant="ghost" className="h-auto p-0 group hover:ring-1 hover:ring-foreground/10 hover:bg-transparent pl-1 relative -left-1" onClick={() => setIsEditing(true)}>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold">{displayName}</h1>
+            <Pencil className="h-3 w-3 opacity-0 scale-75 relative -left-1 -top-1 group-hover:opacity-100 duration-300 ease-in-out transition-opacity" />
+          </div>
         </Button>
       </div>
     )
