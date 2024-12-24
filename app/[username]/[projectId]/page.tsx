@@ -4,20 +4,31 @@ import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { CommitManager } from "@/components/projects/commit-manager"
+import { ProjectNameEditor } from "@/components/projects/project-name-editor"
+import type { Database } from "@/lib/supabase/database.types"
 
 interface ProjectPageProps {
-  params: Promise<{
+  params: {
     username: string
     projectId: string
-  }>
+  }
+}
+
+type Project = Database["public"]["Tables"]["projects"]["Row"] & {
+  display_name: string | null
+}
+
+type ProjectWithProfile = Project & {
+  profiles: {
+    name: string | null
+    username: string
+    avatar_url: string | null
+  }
 }
 
 async function getGitHubStats(fullRepoName: string, token: string) {
-  console.log("Fetching stats for:", fullRepoName)
   const [owner, repo] = fullRepoName.split("/")
-  console.log("Owner/Repo:", { owner, repo })
 
   const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
     headers: {
@@ -25,10 +36,8 @@ async function getGitHubStats(fullRepoName: string, token: string) {
       Accept: "application/vnd.github.v3+json",
     },
   })
-  console.log("Repo API response:", response.status)
   if (!response.ok) return null
   const data = await response.json()
-  console.log("Repo data:", data)
 
   // Get commit count using the repository's default branch
   const commitsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&sha=${data.default_branch}`, {
@@ -49,31 +58,43 @@ async function getGitHubStats(fullRepoName: string, token: string) {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { username, projectId } = await params
+  const { username, projectId } = params
   const supabase = await createClient()
 
-  // Get project and session data
   const [
     { data: project },
     {
       data: { session },
     },
   ] = await Promise.all([
-    supabase.from("projects").select(`*, profiles!inner(name, username, avatar_url)`).eq("name", projectId).eq("profiles.username", username).single(),
+    supabase
+      .from("projects")
+      .select(
+        `
+        *,
+        profiles!inner (
+          name,
+          username,
+          avatar_url
+        )
+      `
+      )
+      .eq("name", projectId)
+      .eq("profiles.username", username)
+      .single(),
     supabase.auth.getSession(),
   ])
 
   if (!project) notFound()
 
-  // Get GitHub stats if we have a token
-  const stats = session?.provider_token ? await getGitHubStats(project.full_name, session.provider_token) : null
+  const stats = session?.provider_token && project.full_name ? await getGitHubStats(project.full_name, session.provider_token) : null
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{project.name}</h1>
+          <ProjectNameEditor projectId={project.id} initialName={project.display_name || project.name} className="mb-2" />
           <div className="flex items-center space-x-4 mb-6">
             <Link href={`/${username}`} className="group inline-flex items-center space-x-2 font-mono text-xs bg-foreground/5 px-2 py-1 rounded-md hover:bg-foreground/10 transition-colors">
               <User className="h-3 w-3" />

@@ -28,9 +28,10 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
+  const [debugData, setDebugData] = useState<any>(null)
 
   useEffect(() => {
-    async function fetchUnprocessedCommits() {
+    async function fetchData() {
       const supabase = createClient()
       const {
         data: { session },
@@ -38,6 +39,16 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
       if (!session?.provider_token) return
 
       try {
+        // Get repository info
+        const repoResponse = await fetch(`https://api.github.com/repos/${fullName}`, {
+          headers: {
+            Authorization: `Bearer ${session.provider_token}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        })
+        const repoData = await repoResponse.json()
+        setDebugData(repoData)
+
         // Get all commits from GitHub
         const response = await fetch(`https://api.github.com/repos/${fullName}/commits`, {
           headers: {
@@ -46,6 +57,7 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
           },
         })
         const allCommits = await response.json()
+        setDebugData(allCommits[0])
 
         // Get processed commits from our database
         const { data: processedCommits } = await supabase.from("commits").select("sha").eq("project_id", projectId)
@@ -64,7 +76,7 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
       }
     }
 
-    fetchUnprocessedCommits()
+    fetchData()
   }, [fullName, projectId])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
@@ -83,7 +95,7 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
   return (
     <div className="space-y-6 border-t pt-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">Process Commits</h2>
+        <h2 className="font-medium">Commits</h2>
         <div className="flex items-center space-x-2 text-sm">
           <Button variant="ghost" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
             <ChevronLeft className="h-4 w-4" />
@@ -115,6 +127,15 @@ export function CommitManager({ projectId, fullName }: CommitManagerProps) {
         ))}
       </div>
       <p className="text-sm text-muted-foreground">{commits.length} unprocessed commits</p>
+
+      {debugData && (
+        <div className="mt-8 border-t pt-4">
+          <details>
+            <summary className="text-sm font-medium cursor-pointer">Debug: GitHub Commit Data</summary>
+            <pre className="mt-2 p-4 bg-muted rounded-lg overflow-auto text-xs">{JSON.stringify(debugData, null, 2)}</pre>
+          </details>
+        </div>
+      )}
     </div>
   )
 }

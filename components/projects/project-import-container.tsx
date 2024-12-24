@@ -87,6 +87,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
         .insert({
           github_id: selectedRepo.id,
           name: selectedRepo.name,
+          display_name: selectedRepo.name.replace(/-/g, " ").replace(/_/g, " "),
           full_name: `${session.user.user_metadata.user_name}/${selectedRepo.name}`,
           description: selectedRepo.description,
           owner_id: session.user.id,
