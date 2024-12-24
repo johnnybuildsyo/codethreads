@@ -10,7 +10,11 @@ import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { CheckSquare, Square, X, Plus } from "lucide-react"
+import { CheckSquare, Square, X, Plus, GripVertical } from "lucide-react"
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 interface ThreadEditorProps {
   projectId: string
@@ -32,10 +36,12 @@ interface FileChange {
   newValue: string
 }
 
-interface MarkdownSection {
+interface ThreadSection {
   id: string
-  content: string
-  afterFile?: string // filename this section follows
+  type: "intro" | "diff" | "markdown" | "summary"
+  content?: string
+  file?: FileChange
+  afterFile?: string
 }
 
 const CommitDiff = ({ files, theme, onRemove }: { files: FileChange[]; theme: string | undefined; onRemove?: (filename: string) => void }) => (
@@ -74,6 +80,25 @@ const CommitDiff = ({ files, theme, onRemove }: { files: FileChange[]; theme: st
   </div>
 )
 
+const SortableItem = ({ section, children }: { section: ThreadSection; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    height: isDragging && section.type === "diff" ? "300px" : "auto",
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <div {...attributes} {...listeners} className="absolute -left-8 top-2 cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity">
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </div>
+      {children}
+    </div>
+  )
+}
+
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
@@ -87,7 +112,14 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [showIntro, setShowIntro] = useState(true)
   const [showSummary, setShowSummary] = useState(true)
-  const [sections, setSections] = useState<MarkdownSection[]>([])
+  const [sections, setSections] = useState<ThreadSection[]>([])
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+  const [isDragging, setIsDragging] = useState(false)
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -110,8 +142,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
     setSelectedFiles(newSelected)
   }
-
-  const selectedDiffs = files.filter((f) => selectedFiles.has(f.filename))
 
   const getProjectPath = () => {
     const { username, projectId } = params
@@ -155,53 +185,44 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
-  const addSection = (afterFile: string) => {
-    setSections([
-      ...sections,
-      {
+  useEffect(() => {
+    // Calculate selected diffs inside the effect
+    const selectedDiffs = files.filter((f) => selectedFiles.has(f.filename))
+
+    const diffSections = selectedDiffs.map((file) => ({
+      id: `diff-${file.filename}`,
+      type: "diff" as const,
+      file,
+    }))
+
+    setSections([{ id: "intro", type: "intro" as const }, ...diffSections, { id: "summary", type: "summary" as const }])
+  }, [files, selectedFiles]) // Add both dependencies
+
+  const handleDragStart = () => setIsDragging(true)
+  const handleDragEnd = (event: any) => {
+    setIsDragging(false)
+    const { active, over } = event
+
+    if (active.id !== over.id) {
+      setSections((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id)
+        const newIndex = items.findIndex((i) => i.id === over.id)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
+  const addMarkdownSection = (afterId: string) => {
+    setSections((current) => {
+      const index = current.findIndex((s) => s.id === afterId)
+      const newSections = [...current]
+      newSections.splice(index + 1, 0, {
         id: crypto.randomUUID(),
+        type: "markdown",
         content: "",
-        afterFile,
-      },
-    ])
-  }
-
-  const updateSection = (id: string, content: string) => {
-    setSections(sections.map((s) => (s.id === id ? { ...s, content } : s)))
-  }
-
-  const removeSection = (id: string) => {
-    setSections(sections.filter((s) => s.id !== id))
-  }
-
-  const renderDiffWithSections = () => {
-    return selectedDiffs.map((file, i) => (
-      <div key={file.filename}>
-        <div className="border rounded-lg p-4 bg-muted/50">
-          <CommitDiff files={[file]} theme={theme} onRemove={() => toggleFile(file.filename)} />
-        </div>
-
-        {i < selectedDiffs.length - 1 && !sections.some((s) => s.afterFile === file.filename) && (
-          <div className="flex justify-center">
-            <Button variant="ghost" onClick={() => addSection(file.filename)} className="mt-4">
-              <Plus className="h-3 w-3 mr-1" />
-              Add markdown
-            </Button>
-          </div>
-        )}
-
-        {sections
-          .filter((s) => s.afterFile === file.filename)
-          .map((section) => (
-            <div key={section.id} className="relative mt-2">
-              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => removeSection(section.id)}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Textarea value={section.content} onChange={(e) => updateSection(section.id, e.target.value)} placeholder="Add notes about these changes..." rows={2} />
-            </div>
-          ))}
-      </div>
-    ))
+      })
+      return newSections
+    })
   }
 
   return (
@@ -244,51 +265,87 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             </div>
           </div>
 
-          {showIntro ? (
-            <div className="relative">
-              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
-            </div>
-          ) : (
-            <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add introduction
-            </Button>
-          )}
-
-          {renderDiffWithSections()}
-
-          {showSummary ? (
-            <div className="relative">
-              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowSummary(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-              <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
-            </div>
-          ) : (
-            <Button variant="outline" className="w-full" onClick={() => setShowSummary(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Summary
-            </Button>
-          )}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <SortableContext items={sections} strategy={verticalListSortingStrategy}>
+              {sections.map((section, index) => (
+                <SortableItem key={section.id} section={section}>
+                  {section.type === "intro" && (
+                    <div className="relative">
+                      {showIntro ? (
+                        <>
+                          <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
+                        </>
+                      ) : (
+                        <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add introduction
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {section.type === "diff" && section.file && (
+                    <>
+                      <div className="border rounded-lg p-4 bg-muted/50">
+                        <CommitDiff files={[section.file]} theme={theme} onRemove={() => toggleFile(section.file!.filename)} />
+                      </div>
+                      {!isDragging && index < sections.length - 2 && (
+                        <div className="flex justify-center">
+                          <Button variant="ghost" onClick={() => addMarkdownSection(section.id)} className="mt-4">
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add markdown
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {section.type === "markdown" && (
+                    <div className="relative mt-2">
+                      <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Textarea
+                        value={section.content}
+                        onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: e.target.value } : item)))}
+                        placeholder="Add notes about these changes..."
+                        rows={2}
+                      />
+                    </div>
+                  )}
+                  {section.type === "summary" && (
+                    <div className="relative">
+                      {showSummary ? (
+                        <>
+                          <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowSummary(false)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
+                        </>
+                      ) : (
+                        <Button variant="ghost" className="w-full" onClick={() => setShowSummary(true)}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add summary
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </SortableItem>
+              ))}
+            </SortableContext>
+          </DndContext>
         </>
       ) : (
         <div className="prose dark:prose-invert max-w-none">
           {showIntro && <ReactMarkdown>{content || "No introduction yet"}</ReactMarkdown>}
-          {selectedDiffs.map((file, i) => (
-            <div key={file.filename}>
-              <div className="not-prose">
-                <CommitDiff files={[file]} theme={theme} />
+          {sections
+            .filter((s) => s.type === "diff")
+            .map((section) => (
+              <div key={section.id} className="not-prose">
+                {section.file && <CommitDiff files={[section.file]} theme={theme} />}
               </div>
-              {sections
-                .filter((s) => s.afterFile === file.filename)
-                .map((section) => (
-                  <ReactMarkdown key={section.id}>{section.content || "No notes yet"}</ReactMarkdown>
-                ))}
-            </div>
-          ))}
+            ))}
           {showSummary && <ReactMarkdown>{summary || "No summary yet"}</ReactMarkdown>}
         </div>
       )}
