@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
-import DiffViewer from "react-diff-viewer-continued"
 import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,9 +12,9 @@ import { useRouter, useParams } from "next/navigation"
 import { CheckSquare, Square, X, Plus, GripVertical, Settings2, Sparkles } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { CommitDiff } from "./editor/commit-diff"
+import { SortableItem } from "./editor/sortable-item"
+import { AIConnect } from "./editor/ai-connect"
 
 interface ThreadEditorProps {
   projectId: string
@@ -45,61 +44,6 @@ interface ThreadSection {
   afterFile?: string
 }
 
-const CommitDiff = ({ files, theme, onRemove }: { files: FileChange[]; theme: string | undefined; onRemove?: (filename: string) => void }) => (
-  <div className="space-y-4">
-    {files.map((file, i) => (
-      <div key={i} className="border rounded-lg p-4 bg-muted/50 relative">
-        {onRemove && (
-          <Button variant="ghost" className="absolute -top-4 -right-[50px] h-6 w-6 px-1" onClick={() => onRemove(file.filename)}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-        <div className="flex justify-between items-center mb-2">
-          <code className="text-xs">{file.filename}</code>
-          <span className="text-xs text-muted-foreground">
-            +{file.additions} -{file.deletions}
-          </span>
-        </div>
-        <div className="max-h-[300px] overflow-auto text-[13px]">
-          <DiffViewer
-            oldValue={file.oldValue}
-            newValue={file.newValue}
-            splitView={false}
-            useDarkTheme={theme === "dark"}
-            hideLineNumbers
-            styles={{
-              contentText: {
-                fontSize: "13px",
-                lineHeight: "1.4",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              },
-            }}
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-)
-
-const SortableItem = ({ section, children }: { section: ThreadSection; children: React.ReactNode }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    height: isDragging && section.type === "diff" ? "300px" : "auto",
-  }
-
-  return (
-    <div ref={setNodeRef} style={style} className="relative">
-      <div {...attributes} {...listeners} className="absolute -left-8 top-2 cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </div>
-      {children}
-    </div>
-  )
-}
-
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
@@ -123,8 +67,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const [isDragging, setIsDragging] = useState(false)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai-key") || "")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [showKeyDialog, setShowKeyDialog] = useState(false)
-  const [keyInput, setKeyInput] = useState("")
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -242,48 +184,12 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
-  const handleKeySubmit = () => {
-    if (keyInput?.startsWith("sk-")) {
-      localStorage.setItem("openai-key", keyInput)
-      setApiKey(keyInput)
-      setShowKeyDialog(false)
-      setKeyInput("")
-    }
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Create Thread</h3>
-        <Button variant="outline" size="sm" onClick={() => setShowKeyDialog(true)} className="text-xs">
-          <Sparkles className={`h-4 w-4 ${apiKey ? "text-yellow-500" : "text-muted-foreground"}`} />
-          {apiKey ? "AI Connected" : "Connect AI"}
-        </Button>
+        <AIConnect apiKey={apiKey} onConnect={setApiKey} />
       </div>
-
-      <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connect OpenAI</DialogTitle>
-            <DialogDescription>Add your API key to enable AI-assisted thread creation</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">OpenAI API Key</label>
-              <Input type="password" placeholder="sk-..." value={keyInput} onChange={(e) => setKeyInput(e.target.value)} autoComplete="off" />
-              <p className="text-xs text-muted-foreground">Your API key is stored locally and never sent to our servers</p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowKeyDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleKeySubmit} disabled={!keyInput?.startsWith("sk-")}>
-              Connect
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <p className="text-sm text-muted-foreground mb-4">
         Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
