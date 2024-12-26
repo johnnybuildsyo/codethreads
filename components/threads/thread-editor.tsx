@@ -237,7 +237,12 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
       {threadIdeas.length > 0 && (
         <Card>
-          <CardTitle className="text-sm font-medium px-4 py-2 border-b">AI Generated Thread Ideas</CardTitle>
+          <div className="flex items-center justify-between px-4 py-2 border-b">
+            <CardTitle className="text-sm font-medium">AI Generated Thread Ideas</CardTitle>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setThreadIdeas([])}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <CardContent className="p-2">
             <div className="flex flex-wrap justify-center">
               {threadIdeas.map((idea) => (
@@ -280,8 +285,13 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
       </p>
 
-      <div className="flex gap-4 items-center mb-4">
-        <Input className="!text-2xl font-bold" placeholder="Thread title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <div className="flex gap-4 lg:gap-8 items-center mb-4">
+        <Input
+          className="!text-2xl font-bold border-t-0 shadow-none border-l-0 border-r-0 rounded-none border-b-foreground/20 pl-1 !focus:outline-none !focus-visible:ring-0 focus:border-b-foreground !ring-0"
+          placeholder="Thread title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
         <Button variant="outline" onClick={generateIdeas} disabled={!aiEnabled || isGenerating}>
           {isGenerating ? (
             <span className="animate-pulse">Generating...</span>
