@@ -172,9 +172,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         file,
       }))
 
-    // Keep non-diff sections and add selected diffs
-    setSections((current) => {
-      const nonDiffSections = current.filter((s) => s.type !== "diff")
+    setSections(() => {
       return [{ id: "intro", type: "intro" as const }, ...selectedDiffs, { id: "summary", type: "summary" as const }]
     })
   }, [files, selectedFiles])
@@ -244,14 +242,29 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             <div className="flex flex-wrap justify-center">
               {threadIdeas.map((idea) => (
                 <div className="w-1/3" key={idea}>
-                  <div className="p-2">
-                    <div className="text-center text-balance border text-sm rounded-lg p-2">{idea}</div>
+                  <div className="p-2 h-full">
+                    <div className="flex flex-col justify-between border text-sm rounded-lg p-2 space-y-2 h-full">
+                      <p className="text-center text-balance grow">{idea}</p>
+                      <div className="flex justify-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-12 text-xs inline-block"
+                          onClick={() => {
+                            setTitle(idea)
+                            setThreadIdeas([])
+                          }}
+                        >
+                          Select Title
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             <div className="text-center text-lg py-8">
-              <div>Choose an idea</div>
+              <div>Choose a title</div>
               <div className="text-sm">
                 or{" "}
                 <button className="underline" onClick={generateIdeas}>
