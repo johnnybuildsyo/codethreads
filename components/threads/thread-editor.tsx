@@ -15,8 +15,11 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CommitDiff } from "./editor/commit-diff"
 import { SortableItem } from "./editor/sortable-item"
 import { AIConnect } from "./editor/ai-connect"
+import { generateThreadIdeas } from "@/lib/ai/threads/actions"
 import { getStreamingText } from "@/app/api/ai/util"
 import { toast } from "sonner"
+import { readStreamableValue } from "ai/rsc"
+import { Card, CardContent, CardTitle } from "../ui/card"
 
 interface ThreadEditorProps {
   projectId: string
@@ -69,6 +72,17 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const [isDragging, setIsDragging] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiEnabled] = useState(true)
+  const [threadIdeas, setThreadIdeas] = useState<string[]>([])
+
+  let codeChanges = files
+    .filter((f) => selectedFiles.has(f.filename))
+    .map((f) => `File: ${f.filename}\n\nChanges:\n${f.newValue}`)
+    .join("\n\n---\n\n")
+
+  // Truncate if too long
+  codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "...(truncated)" : codeChanges
+
+  console.log({ codeChanges })
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -135,17 +149,21 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   useEffect(() => {
-    // Calculate selected diffs inside the effect
-    const selectedDiffs = files.filter((f) => selectedFiles.has(f.filename))
+    // Only include sections for selected files
+    const selectedDiffs = files
+      .filter((f) => selectedFiles.has(f.filename))
+      .map((file) => ({
+        id: `diff-${file.filename}`,
+        type: "diff" as const,
+        file,
+      }))
 
-    const diffSections = selectedDiffs.map((file) => ({
-      id: `diff-${file.filename}`,
-      type: "diff" as const,
-      file,
-    }))
-
-    setSections([{ id: "intro", type: "intro" as const }, ...diffSections, { id: "summary", type: "summary" as const }])
-  }, [files, selectedFiles]) // Add both dependencies
+    // Keep non-diff sections and add selected diffs
+    setSections((current) => {
+      const nonDiffSections = current.filter((s) => s.type !== "diff")
+      return [{ id: "intro", type: "intro" as const }, ...selectedDiffs, { id: "summary", type: "summary" as const }]
+    })
+  }, [files, selectedFiles])
 
   const handleDragStart = () => setIsDragging(true)
   const handleDragEnd = (event: any) => {
@@ -174,16 +192,20 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   }
 
-  const generateThread = async () => {
+  const generateIdeas = async () => {
+    const { object } = await generateThreadIdeas(codeChanges)
+    for await (const partialObject of readStreamableValue(object)) {
+      if (partialObject?.threadIdeas) {
+        setThreadIdeas(partialObject.threadIdeas)
+      }
+    }
+  }
+
+  const generateIntro = async () => {
     setIsGenerating(true)
     try {
       setIntro("")
       setView("preview")
-      let codeChanges = files
-        .filter((f) => selectedFiles.has(f.filename))
-        .map((f) => f.filename)
-        .join(", ")
-      codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "..." : codeChanges
       const input = `Given the following code changes, reply with a short intro of 1-2 paragraphs. The writing style should be concise and to the point without hyperbole:\n\n${codeChanges}`
       await getStreamingText(input, setIntro)
     } catch (error) {
@@ -201,13 +223,39 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         <AIConnect enabled={aiEnabled} />
       </div>
 
+      {threadIdeas.length > 0 && (
+        <Card>
+          <CardTitle className="text-sm font-medium px-4 py-2 border-b">AI Generated Thread Ideas</CardTitle>
+          <CardContent className="p-2">
+            <div className="flex flex-wrap justify-center">
+              {threadIdeas.map((idea) => (
+                <div className="w-1/3" key={idea}>
+                  <div className="p-2">
+                    <div className="text-center text-balance border text-sm rounded-lg p-2">{idea}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center text-lg py-8">
+              <div>Choose an idea</div>
+              <div className="text-sm">
+                or{" "}
+                <button className="underline" onClick={generateIdeas}>
+                  try again
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <p className="text-sm text-muted-foreground mb-4">
         Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
       </p>
 
       <div className="flex gap-4 items-center mb-4">
         <Input className="!text-2xl font-bold" placeholder="Thread title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Button variant="outline" onClick={generateThread} disabled={!aiEnabled || isGenerating}>
+        <Button variant="outline" onClick={generateIdeas} disabled={!aiEnabled || isGenerating}>
           {isGenerating ? (
             <span className="animate-pulse">Generating...</span>
           ) : (
