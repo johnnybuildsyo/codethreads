@@ -15,6 +15,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CommitDiff } from "./editor/commit-diff"
 import { SortableItem } from "./editor/sortable-item"
 import { AIConnect } from "./editor/ai-connect"
+import { getStreamingText } from "@/app/api/ai/util"
+import { toast } from "sonner"
 
 interface ThreadEditorProps {
   projectId: string
@@ -47,7 +49,7 @@ interface ThreadSection {
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
+  const [intro, setIntro] = useState("")
   const [summary, setSummary] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
@@ -65,8 +67,8 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   )
   const [isDragging, setIsDragging] = useState(false)
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai-key") || "")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [aiEnabled] = useState(true)
 
   // Fetch diff when component mounts
   useEffect(() => {
@@ -109,7 +111,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         .insert({
           project_id: projectId,
           title,
-          teaser: content.slice(0, 280),
+          teaser: intro.slice(0, 280),
         })
         .select()
         .single()
@@ -118,7 +120,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
       const { error: postError } = await supabase.from("posts").insert({
         thread_id: thread.id,
-        content: `${content}\n\n${summary}`,
+        intro: `${intro}\n\n${summary}`,
         commit_sha: commit.sha,
       })
 
@@ -173,12 +175,19 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   const generateThread = async () => {
-    if (!apiKey) return
     setIsGenerating(true)
     try {
-      // TODO: Call API to generate thread content
+      setIntro("")
+      let codeChanges = files
+        .filter((f) => selectedFiles.has(f.filename))
+        .map((f) => f.filename)
+        .join(", ")
+      codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "..." : codeChanges
+      const input = `Given the following code changes, reply with a short intro of 1-2 paragraphs:\n\n${codeChanges}`
+      await getStreamingText(input, setIntro)
     } catch (error) {
       console.error("Failed to generate thread:", error)
+      toast.error("AI generation failed. Please try again.")
     } finally {
       setIsGenerating(false)
     }
@@ -188,7 +197,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Create Thread</h3>
-        <AIConnect apiKey={apiKey} onConnect={setApiKey} />
+        <AIConnect enabled={aiEnabled} />
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">
@@ -197,7 +206,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
       <div className="flex gap-4 items-center mb-4">
         <Input className="!text-2xl font-bold" placeholder="Thread title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Button variant="outline" onClick={generateThread} disabled={!apiKey || isGenerating}>
+        <Button variant="outline" onClick={generateThread} disabled={!aiEnabled || isGenerating}>
           {isGenerating ? (
             <span className="animate-pulse">Generating...</span>
           ) : (
@@ -246,7 +255,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                           <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
                             <X className="h-4 w-4" />
                           </Button>
-                          <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} />
+                          <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={intro} onChange={(e) => setIntro(e.target.value)} rows={3} />
                         </>
                       ) : (
                         <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
@@ -308,7 +317,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         </>
       ) : (
         <div className="prose dark:prose-invert max-w-none">
-          {showIntro && <ReactMarkdown>{content || "No introduction yet"}</ReactMarkdown>}
+          {showIntro && <ReactMarkdown>{intro || "No introduction yet"}</ReactMarkdown>}
           {sections
             .filter((s) => s.type === "diff")
             .map((section) => (
@@ -324,7 +333,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         <Button variant="ghost" onClick={handleCancel}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={!title || !content || !summary || isSubmitting}>
+        <Button onClick={handleSubmit} disabled={!title || !intro || !summary || isSubmitting}>
           {isSubmitting ? "Creating..." : "Create Thread"}
         </Button>
       </div>

@@ -4,9 +4,9 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { ChevronLeft, ChevronRight, Github } from "lucide-react"
-import { signInWithGitHub } from "@/components/auth/actions"
+import { GitHubAuthGate } from "../auth/github-auth-gate"
+import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
-
 interface Commit {
   sha: string
   commit: {
@@ -28,13 +28,12 @@ interface CommitManagerProps {
 const COMMITS_PER_PAGE = 5
 
 export function CommitManager({ projectId, fullName, isOwner }: CommitManagerProps) {
-  const router = useRouter()
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [session, setSession] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -51,9 +50,6 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
     if (action === "new") {
       router.push(`${window.location.pathname}/thread/new?commit=${commit.sha}`)
     }
-    console.log(`Processing commit ${commit.sha} with action: ${action}`)
-    console.log({ commit })
-    // TODO: Process the commit based on action
   }
 
   const fetchCommits = async () => {
@@ -99,28 +95,11 @@ export function CommitManager({ projectId, fullName, isOwner }: CommitManagerPro
   if (!session) return null
 
   if (loading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Loading commits... <span className="animate-pulse">⋯</span>
-      </div>
-    )
+    return <LoadingAnimation />
   }
 
   if (!session.provider_token && isOwner) {
-    return (
-      <div className="text-center p-6 border rounded-lg">
-        <p className="text-sm text-muted-foreground mb-4">GitHub authentication required to fetch commits</p>
-        <Button
-          onClick={async () => {
-            const url = await signInWithGitHub()
-            if (url) window.location.href = url
-          }}
-        >
-          <Github className="mr-2 h-4 w-4" />
-          Connect GitHub
-        </Button>
-      </div>
-    )
+    return <GitHubAuthGate />
   }
 
   if (!session.provider_token) return null

@@ -2,7 +2,6 @@ import Header from "@/components/layout/header"
 import { ThreadEditor } from "@/components/threads/thread-editor"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
 
 interface NewThreadPageProps {
   params: {
