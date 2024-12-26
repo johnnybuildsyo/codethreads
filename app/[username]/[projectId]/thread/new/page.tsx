@@ -1,3 +1,4 @@
+import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 import Header from "@/components/layout/header"
 import { ThreadEditor } from "@/components/threads/thread-editor"
 import { createClient } from "@/lib/supabase/server"
@@ -39,7 +40,17 @@ export default async function NewThreadPage({ params, searchParams }: NewThreadP
     },
   })
 
-  if (!response.ok) notFound()
+  if (!response.ok) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <h3 className="text-2xl font-bold mb-8">Create Thread</h3>
+          <GitHubAuthGate />
+        </main>
+      </div>
+    )
+  }
 
   const commitData = await response.json()
   const commit = {
@@ -48,8 +59,6 @@ export default async function NewThreadPage({ params, searchParams }: NewThreadP
     author_name: commitData.commit.author.name,
     authored_at: commitData.commit.author.date,
   }
-
-  const projectPath = `/${username}/${projectId}`
 
   return (
     <div className="min-h-screen bg-background">

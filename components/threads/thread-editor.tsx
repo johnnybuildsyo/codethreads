@@ -9,7 +9,7 @@ import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { CheckSquare, Square, X, Plus, GripVertical, Settings2, Sparkles } from "lucide-react"
+import { CheckSquare, Square, X, Plus, Sparkles } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CommitDiff } from "./editor/commit-diff"
@@ -53,7 +53,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const [summary, setSummary] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
-  const [view, setView] = useState<"write" | "preview">("write")
+  const [view, setView] = useState<"edit" | "preview">("edit")
   const router = useRouter()
   const params = useParams()
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
@@ -178,12 +178,13 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     setIsGenerating(true)
     try {
       setIntro("")
+      setView("preview")
       let codeChanges = files
         .filter((f) => selectedFiles.has(f.filename))
         .map((f) => f.filename)
         .join(", ")
       codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "..." : codeChanges
-      const input = `Given the following code changes, reply with a short intro of 1-2 paragraphs:\n\n${codeChanges}`
+      const input = `Given the following code changes, reply with a short intro of 1-2 paragraphs. The writing style should be concise and to the point without hyperbole:\n\n${codeChanges}`
       await getStreamingText(input, setIntro)
     } catch (error) {
       console.error("Failed to generate thread:", error)
@@ -216,15 +217,15 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             </>
           )}
         </Button>
-        <Tabs value={view} onValueChange={(v) => setView(v as "write" | "preview")}>
+        <Tabs value={view} onValueChange={(v) => setView(v as "edit" | "preview")}>
           <TabsList>
-            <TabsTrigger value="write">Write</TabsTrigger>
+            <TabsTrigger value="edit">Edit</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      {view === "write" ? (
+      {view === "edit" ? (
         <>
           <div className="space-y-2 py-4">
             <h4 className="text-sm font-medium">Included Commits to Files...</h4>
