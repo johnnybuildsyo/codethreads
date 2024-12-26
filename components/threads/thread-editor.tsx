@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -96,8 +96,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   // Truncate if too long
   codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "...(truncated)" : codeChanges
 
-  console.log({ codeChanges })
-
   // Fetch diff when component mounts
   useEffect(() => {
     async function fetchDiff() {
@@ -110,15 +108,31 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     fetchDiff()
   }, [commit.sha, fullName])
 
-  const toggleFile = (filename: string) => {
-    const newSelected = new Set(selectedFiles)
-    if (newSelected.has(filename)) {
-      newSelected.delete(filename)
-    } else {
-      newSelected.add(filename)
-    }
-    setSelectedFiles(newSelected)
-  }
+  // Memoize filtered files
+  const selectedDiffs = useMemo(
+    () =>
+      files
+        .filter((f) => selectedFiles.has(f.filename))
+        .map((file) => ({
+          id: `diff-${file.filename}`,
+          type: "diff" as const,
+          file,
+        })),
+    [files, selectedFiles]
+  )
+
+  // Memoize toggle handler
+  const toggleFile = useCallback((filename: string) => {
+    setSelectedFiles((prev) => {
+      const next = new Set(prev)
+      if (next.has(filename)) {
+        next.delete(filename)
+      } else {
+        next.add(filename)
+      }
+      return next
+    })
+  }, [])
 
   const getProjectPath = () => {
     const { username, projectId } = params
@@ -163,19 +177,10 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   useEffect(() => {
-    // Only include sections for selected files
-    const selectedDiffs = files
-      .filter((f) => selectedFiles.has(f.filename))
-      .map((file) => ({
-        id: `diff-${file.filename}`,
-        type: "diff" as const,
-        file,
-      }))
-
     setSections(() => {
       return [{ id: "intro", type: "intro" as const }, ...selectedDiffs, { id: "summary", type: "summary" as const }]
     })
-  }, [files, selectedFiles])
+  }, [selectedDiffs])
 
   const handleDragStart = () => setIsDragging(true)
   const handleDragEnd = (event: any) => {
@@ -285,7 +290,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
       </p>
 
-      <div className="flex gap-4 lg:gap-8 items-center mb-4">
+      <div className="flex gap-4 items-center mb-4">
         <Input
           className="!text-2xl font-bold border-t-0 shadow-none border-l-0 border-r-0 rounded-none border-b-foreground/20 pl-1 !focus:outline-none !focus-visible:ring-0 focus:border-b-foreground !ring-0"
           placeholder="Thread title"

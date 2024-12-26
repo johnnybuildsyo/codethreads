@@ -42,3 +42,8 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 ```
+
+## Testing
+
+Thread title:
+Building a new Build In Public Writing Tool (in public)
