@@ -49,6 +49,20 @@ interface ThreadSection {
   afterFile?: string
 }
 
+const shouldExcludeFile = (filename: string): boolean => {
+  const excludePatterns = [
+    /^public\//, // public folder
+    /package-lock\.json$/, // npm
+    /yarn\.lock$/, // yarn
+    /pnpm-lock\.yaml$/, // pnpm
+    /\.lock$/, // generic lock files
+    /\.(woff2?|ttf|eot|otf)$/, // font files
+    /\.ico$/, // ico files
+  ]
+
+  return excludePatterns.some((pattern) => pattern.test(filename))
+}
+
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
@@ -90,8 +104,8 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       const response = await fetch(`/api/github/commits/${commit.sha}/diff?repo=${encodeURIComponent(fullName)}`)
       const data = await response.json()
       setFiles(data)
-      // By default, select all files
-      setSelectedFiles(new Set(data.map((f: FileChange) => f.filename)))
+      // By default, select all non-excluded files
+      setSelectedFiles(new Set(data.filter((f: FileChange) => !shouldExcludeFile(f.filename)).map((f: FileChange) => f.filename)))
     }
     fetchDiff()
   }, [commit.sha, fullName])
