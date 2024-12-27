@@ -12,7 +12,6 @@ interface ProjectPageProps {
     username: string
     projectId: string
   }
-  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 async function getGitHubStats(fullRepoName: string, token: string) {
@@ -45,7 +44,7 @@ async function getGitHubStats(fullRepoName: string, token: string) {
   }
 }
 
-export default async function ProjectPage({ params, searchParams }: ProjectPageProps) {
+export default async function ProjectPage({ params }: ProjectPageProps) {
   const { username, projectId } = await params
   const supabase = await createClient()
 
