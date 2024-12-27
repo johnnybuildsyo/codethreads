@@ -5,9 +5,9 @@ import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
 
 interface UserPageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export default async function UserPage({ params }: UserPageProps) {
