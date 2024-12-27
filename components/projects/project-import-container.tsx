@@ -10,6 +10,16 @@ interface ProjectImportContainerProps {
   username: string
 }
 
+interface GitHubApiResponse {
+  id: number
+  name: string
+  description: string | null
+  stargazers_count: number
+  forks_count: number
+  language: string | null
+  updated_at: string
+}
+
 export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
   const router = useRouter()
   const [repos, setRepos] = useState<GithubRepo[]>([])
@@ -41,7 +51,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
         if (!response.ok) throw new Error("Failed to fetch repositories")
 
         const data = await response.json()
-        const mappedRepos: GithubRepo[] = data.map((repo: any) => ({
+        const mappedRepos: GithubRepo[] = data.map((repo: GitHubApiResponse) => ({
           id: repo.id,
           name: repo.name,
           description: repo.description || "",
