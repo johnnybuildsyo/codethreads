@@ -1,3 +1,5 @@
+import { FileChange } from "@/components/threads/editor/types"
+
 export interface ThreadPost {
   id: number
   content: string
@@ -5,14 +7,7 @@ export interface ThreadPost {
   commit?: {
     message: string
     diff: string
-    files: {
-      filename: string
-      status: string
-      additions: number
-      deletions: number
-      oldValue: string
-      newValue: string
-    }[]
+    files?: FileChange[]
   }
 }
 

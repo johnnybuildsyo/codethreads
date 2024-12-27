@@ -6,20 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LogoIcon from "@/components/graphics/logo-icon"
+import { Session, User } from "@supabase/supabase-js"
 
 export default function WelcomePage() {
   const [username, setUsername] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [session, setSession] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setUser(session?.user)
+      setUser(session?.user || null)
       // Set initial username from GitHub preferred_username
       if (session?.user?.user_metadata?.preferred_username) {
         setUsername(session.user.user_metadata.preferred_username.toLowerCase().replace(/[^a-z0-9_]/g, ""))
@@ -31,7 +32,7 @@ export default function WelcomePage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      setUser(session?.user)
+      setUser(session?.user || null)
     })
 
     return () => subscription.unsubscribe()

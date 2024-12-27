@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
-import { ChevronLeft, ChevronRight, Github } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { GitHubAuthGate } from "../auth/github-auth-gate"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
@@ -20,14 +20,13 @@ interface Commit {
 }
 
 interface CommitManagerProps {
-  projectId: string
   fullName: string
   isOwner: boolean
 }
 
 const COMMITS_PER_PAGE = 5
 
-export function CommitManager({ projectId, fullName, isOwner }: CommitManagerProps) {
+export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)

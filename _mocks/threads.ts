@@ -31,6 +31,14 @@ index 1234567..89abcdef 100644
 +  text: '#212529',
 +  background: '#f8f9fa',
  };`,
+        files: [{
+          filename: "styles/colors.css",
+          status: "modified",
+          additions: 25,
+          deletions: 10,
+          oldValue: "...",
+          newValue: "..."
+        }]
       },
     },
     {
@@ -65,6 +73,14 @@ index 2345678..9abcdef0 100644
      outline-offset: 2px;
    }
  \`;`,
+        files: [{
+          filename: "components/Button.tsx",
+          status: "modified",
+          additions: 23,
+          deletions: 10,
+          oldValue: "...",
+          newValue: "..."
+        }]
       },
     },
     {
@@ -100,6 +116,14 @@ index 3456789..0abcdef1 100644
 +    color: rgba(33, 37, 41, 0.6);
    }
  \`;`,
+        files: [{
+          filename: "components/Input.tsx",
+          status: "modified",
+          additions: 23,
+          deletions: 10,
+          oldValue: "...",
+          newValue: "..."
+        }]
       },
     },
   ],

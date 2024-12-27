@@ -181,7 +181,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
           <p className="text-muted-foreground">{project.description}</p>
           <div className="mt-4">
-            <CommitManager projectId={project.id} fullName={project.full_name} isOwner={isOwner} />
+            <CommitManager fullName={project.full_name} isOwner={isOwner} />
           </div>
         </div>
         {/* Thread list will be added later */}
