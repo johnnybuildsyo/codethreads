@@ -21,8 +21,11 @@ export function GitHubAuthGate({ message = "Please sign in with GitHub to contin
         onClick={async () => {
           setIsLoading(true)
           const url = await signInWithGitHub()
-          if (url) window.location.href = url
-          setIsLoading(false)
+          if (url) {
+            window.location.href = url
+          } else {
+            setIsLoading(false)
+          }
         }}
         className={isLoading ? "hidden" : ""}
       >

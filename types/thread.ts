@@ -2,9 +2,17 @@ export interface ThreadPost {
   id: number
   content: string
   timestamp: string
-  commit: {
+  commit?: {
     message: string
     diff: string
+    files: {
+      filename: string
+      status: string
+      additions: number
+      deletions: number
+      oldValue: string
+      newValue: string
+    }[]
   }
 }
 

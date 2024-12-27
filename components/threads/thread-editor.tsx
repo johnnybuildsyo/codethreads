@@ -1,29 +1,29 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
-import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Plus, Sparkles } from "lucide-react"
+import { X, Sparkles, FileDiff } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { CommitDiff } from "./editor/commit-diff"
 import { SortableItem } from "./editor/sortable-item"
 import { AIConnect } from "./editor/ai-connect"
 import { generateThreadIdeas } from "@/lib/ai/threads/actions"
-import { getStreamingText } from "@/app/api/ai/util"
 import { toast } from "sonner"
 import { readStreamableValue } from "ai/rsc"
 import { Card, CardContent, CardTitle } from "../ui/card"
 import { ThreadPreview } from "./editor/thread-preview"
 import { ThreadProvider } from "./editor/thread-context"
-import { FileSelector } from "./editor/file-selector"
+import { CommitInfo } from "./editor/commit-info"
 import { ImageUpload } from "./editor/image-upload"
+import { DiffSelector } from "./editor/diff-selector"
+import { shouldExcludeFile } from "@/lib/utils"
+import { CommitDiff } from "./editor/commit-diff"
 
 interface ThreadEditorProps {
   projectId: string
@@ -47,40 +47,27 @@ interface FileChange {
 
 interface ThreadSection {
   id: string
-  type: "intro" | "diff" | "markdown" | "summary"
+  type: "diff" | "markdown"
   content?: string
   file?: FileChange
   afterFile?: string
 }
 
-const shouldExcludeFile = (filename: string): boolean => {
-  const excludePatterns = [
-    /^public\//, // public folder
-    /package-lock\.json$/, // npm
-    /yarn\.lock$/, // yarn
-    /pnpm-lock\.yaml$/, // pnpm
-    /\.lock$/, // generic lock files
-    /\.(woff2?|ttf|eot|otf)$/, // font files
-    /\.ico$/, // ico files
-  ]
-
-  return excludePatterns.some((pattern) => pattern.test(filename))
-}
-
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState("")
-  const [intro, setIntro] = useState("")
-  const [summary, setSummary] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
   const router = useRouter()
   const params = useParams()
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  const [showIntro, setShowIntro] = useState(true)
-  const [showSummary, setShowSummary] = useState(true)
-  const [sections, setSections] = useState<ThreadSection[]>([])
+  const [sections, setSections] = useState<ThreadSection[]>([
+    {
+      id: crypto.randomUUID(),
+      type: "markdown",
+      content: "",
+    },
+  ])
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -91,9 +78,11 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiEnabled] = useState(true)
   const [threadIdeas, setThreadIdeas] = useState<string[]>([])
+  const [activeSectionId, setActiveSectionId] = useState<string>()
+  const [diffDialogOpen, setDiffDialogOpen] = useState(false)
 
   let codeChanges = files
-    .filter((f) => selectedFiles.has(f.filename))
+    .filter((f) => !shouldExcludeFile(f.filename))
     .map((f) => `File: ${f.filename}\n\nChanges:\n${f.newValue}`)
     .join("\n\n---\n\n")
 
@@ -106,8 +95,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       const response = await fetch(`/api/github/commits/${commit.sha}/diff?repo=${encodeURIComponent(fullName)}`)
       const data = await response.json()
       setFiles(data)
-      // By default, select all non-excluded files
-      setSelectedFiles(new Set(data.filter((f: FileChange) => !shouldExcludeFile(f.filename)).map((f: FileChange) => f.filename)))
     }
     fetchDiff()
   }, [commit.sha, fullName])
@@ -116,27 +103,14 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   const selectedDiffs = useMemo(
     () =>
       files
-        .filter((f) => selectedFiles.has(f.filename))
+        .filter((f) => !shouldExcludeFile(f.filename))
         .map((file) => ({
           id: `diff-${file.filename}`,
           type: "diff" as const,
           file,
         })),
-    [files, selectedFiles]
+    [files]
   )
-
-  // Memoize toggle handler
-  const toggleFile = useCallback((filename: string) => {
-    setSelectedFiles((prev) => {
-      const next = new Set(prev)
-      if (next.has(filename)) {
-        next.delete(filename)
-      } else {
-        next.add(filename)
-      }
-      return next
-    })
-  }, [])
 
   const getProjectPath = () => {
     const { username, projectId } = params
@@ -152,25 +126,26 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     const supabase = createClient()
 
     try {
-      const { data: thread, error: threadError } = await supabase
+      const content = sections
+        .filter((s) => s.type === "markdown")
+        .map((s) => s.content)
+        .join("\n\n")
+
+      const { data: thread } = await supabase
         .from("threads")
         .insert({
           project_id: projectId,
           title,
-          teaser: intro.slice(0, 280),
+          teaser: content.slice(0, 280),
         })
         .select()
         .single()
 
-      if (threadError) throw threadError
-
-      const { error: postError } = await supabase.from("posts").insert({
+      await supabase.from("posts").insert({
         thread_id: thread.id,
-        intro: `${intro}\n\n${summary}`,
+        intro: content,
         commit_sha: commit.sha,
       })
-
-      if (postError) throw postError
 
       router.push(getProjectPath())
     } catch (error) {
@@ -181,8 +156,8 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   useEffect(() => {
-    setSections(() => {
-      return [{ id: "intro", type: "intro" as const }, ...selectedDiffs, { id: "summary", type: "summary" as const }]
+    setSections((current) => {
+      return current.filter((s) => s.type === "markdown")
     })
   }, [selectedDiffs])
 
@@ -222,21 +197,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
-  const generateIntro = async () => {
-    setIsGenerating(true)
-    try {
-      setIntro("")
-      setView("preview")
-      const input = `Given the following code changes, reply with a short intro of 1-2 paragraphs. The writing style should be concise and to the point without hyperbole:\n\n${codeChanges}`
-      await getStreamingText(input, setIntro)
-    } catch (error) {
-      console.error("Failed to generate thread:", error)
-      toast.error("AI generation failed. Please try again.")
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
   const handleImageUpload = async (file: File, updateContent: (updater: (current: string) => string) => void) => {
     try {
       const formData = new FormData()
@@ -259,6 +219,8 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       toast.error("Failed to upload image. Please try again.")
     }
   }
+
+  console.log({ sections })
 
   return (
     <ThreadProvider>
@@ -315,9 +277,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             </Card>
           )}
 
-          <p className="text-sm text-muted-foreground mb-4">
-            Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
-          </p>
+          <CommitInfo commit={commit} files={files} fullName={fullName} />
 
           <div className="flex gap-4 items-center mb-4">
             <Input
@@ -346,81 +306,43 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
           {view === "edit" ? (
             <>
-              <FileSelector files={files} selectedFiles={selectedFiles} onToggle={toggleFile} />
-
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <SortableContext items={sections} strategy={verticalListSortingStrategy}>
                   {sections.map((section, index) => (
                     <SortableItem key={section.id} section={section}>
-                      {section.type === "intro" && (
-                        <div className="relative space-y-2">
-                          {showIntro ? (
-                            <>
-                              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={intro} onChange={(e) => setIntro(e.target.value)} rows={3} />
-                              <ImageUpload onUpload={(file) => handleImageUpload(file, setIntro)} />
-                            </>
-                          ) : (
-                            <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add introduction
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                      {section.type === "diff" && section.file && (
-                        <>
-                          <div className="border rounded-lg p-4 bg-muted/50">
-                            <CommitDiff files={[section.file]} theme={theme} onRemove={() => toggleFile(section.file!.filename)} />
-                          </div>
-                          {!isDragging && index < sections.length - 2 && (
-                            <div className="flex justify-center">
-                              <Button variant="ghost" onClick={() => addMarkdownSection(section.id)} className="mt-4">
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add markdown
-                              </Button>
-                            </div>
-                          )}
-                        </>
-                      )}
                       {section.type === "markdown" && (
                         <div className="relative mt-2">
                           <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
                             <X className="h-4 w-4" />
                           </Button>
                           <Textarea
+                            className="mb-2"
                             value={section.content}
                             onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: e.target.value } : item)))}
-                            placeholder="Add notes about these changes..."
+                            placeholder="Write a post..."
                             rows={2}
                           />
-                          <ImageUpload
-                            onUpload={(file) =>
-                              handleImageUpload(file, (updater) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: updater(item.content || "") } : item))))
-                            }
-                          />
-                        </div>
-                      )}
-                      {section.type === "summary" && (
-                        <div className="relative">
-                          {showSummary ? (
-                            <>
-                              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowSummary(false)}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
-                              <ImageUpload onUpload={(file) => handleImageUpload(file, setSummary)} />
-                            </>
-                          ) : (
-                            <Button variant="ghost" className="w-full" onClick={() => setShowSummary(true)}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add summary
+                          <div className="flex gap-2">
+                            <ImageUpload
+                              onUpload={(file) =>
+                                handleImageUpload(file, (updater) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: updater(item.content || "") } : item))))
+                              }
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setActiveSectionId(section.id)
+                                setDiffDialogOpen(true)
+                              }}
+                            >
+                              <FileDiff className="h-4 w-4 mr-1" />
+                              Add Code
                             </Button>
-                          )}
+                          </div>
                         </div>
                       )}
+                      {section.type === "diff" && section.file && <CommitDiff files={[section.file]} defaultRenderDiff={false} theme={theme} />}
                     </SortableItem>
                   ))}
                 </SortableContext>
@@ -428,15 +350,13 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             </>
           ) : (
             <div className="prose dark:prose-invert max-w-none">
-              {showIntro && <ReactMarkdown>{intro || "No introduction yet"}</ReactMarkdown>}
               {sections
-                .filter((s) => s.type === "diff")
+                .filter((s) => s.type === "markdown")
                 .map((section) => (
                   <div key={section.id} className="not-prose">
-                    {section.file && <CommitDiff files={[section.file]} theme={theme} />}
+                    {section.content}
                   </div>
                 ))}
-              {showSummary && <ReactMarkdown>{summary || "No summary yet"}</ReactMarkdown>}
             </div>
           )}
 
@@ -444,15 +364,40 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             <Button variant="ghost" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={!title || !intro || !summary || isSubmitting}>
+            <Button onClick={handleSubmit} disabled={!title || isSubmitting}>
               {isSubmitting ? "Creating..." : "Create Thread"}
             </Button>
           </div>
         </div>
         <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
-          <ThreadPreview title={title} intro={intro} sections={sections} summary={summary} theme={theme} showIntro={showIntro} showSummary={showSummary} />
+          <ThreadPreview title={title} sections={sections} theme={theme} />
         </div>
       </div>
+
+      <DiffSelector
+        open={diffDialogOpen}
+        onClose={() => {
+          setDiffDialogOpen(false)
+          setActiveSectionId(undefined)
+        }}
+        files={files}
+        onSelect={(selectedFiles) => {
+          setSections((current) => {
+            const index = current.findIndex((s) => s.id === activeSectionId)
+            const newSections = [...current]
+            selectedFiles.forEach((file, i) => {
+              newSections.splice(index + 1 + i, 0, {
+                id: crypto.randomUUID(),
+                type: "diff",
+                file,
+              })
+            })
+            return newSections
+          })
+          setDiffDialogOpen(false)
+          setActiveSectionId(undefined)
+        }}
+      />
     </ThreadProvider>
   )
 }

@@ -7,8 +7,13 @@ interface ThreadContextType {
 
 const ThreadContext = createContext<ThreadContextType | null>(null)
 
-export function ThreadProvider({ children }: { children: React.ReactNode }) {
-  const [activeView, setActiveView] = useState<"editor" | "preview">("editor")
+interface ThreadProviderProps {
+  children: React.ReactNode
+  defaultView?: "editor" | "preview"
+}
+
+export function ThreadProvider({ children, defaultView = "editor" }: ThreadProviderProps) {
+  const [activeView, setActiveView] = useState<"editor" | "preview">(defaultView)
 
   return <ThreadContext.Provider value={{ activeView, setActiveView }}>{children}</ThreadContext.Provider>
 }

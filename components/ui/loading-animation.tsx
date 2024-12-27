@@ -1,6 +1,6 @@
 "use client"
 
-export function LoadingAnimation() {
+export function LoadingAnimation({ className }: { className?: string }) {
   return (
     <div className="text-muted-foreground">
       <span className="pr-0.5 animate-pulse">Loading</span>
