@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -24,6 +24,7 @@ import { ImageUpload } from "./editor/image-upload"
 import { DiffSelector } from "./editor/diff-selector"
 import { shouldExcludeFile } from "@/lib/utils"
 import { CommitDiff } from "./editor/commit-diff"
+import { FileChange, ThreadSection } from "./editor/types"
 
 interface ThreadEditorProps {
   projectId: string
@@ -34,23 +35,6 @@ interface ThreadEditorProps {
     authored_at: string
   }
   fullName: string
-}
-
-interface FileChange {
-  filename: string
-  status: string
-  additions: number
-  deletions: number
-  oldValue: string
-  newValue: string
-}
-
-interface ThreadSection {
-  id: string
-  type: "diff" | "markdown"
-  content?: string
-  file?: FileChange
-  role?: "intro" | "details" | "summary"
 }
 
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
@@ -210,7 +194,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
-  const handleImageUpload = async (file: File, updateContent: (updater: (current: string) => string) => void) => {
+  const handleImageUpload = async (file: File) => {
     try {
       const formData = new FormData()
       formData.append("file", file)
@@ -223,9 +207,15 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       if (!response.ok) throw new Error("Upload failed")
 
       const { image_url } = await response.json()
-      updateContent((current) => {
-        const newContent = current.trim()
-        return newContent ? `${newContent}\n\n![](${image_url})` : `![](${image_url})`
+      setSections((current) => {
+        const index = current.findIndex((s) => s.id === activeSectionId)
+        const newSections = [...current]
+        newSections.splice(index + 1, 0, {
+          id: crypto.randomUUID(),
+          type: "image",
+          imageUrl: image_url,
+        })
+        return newSections
       })
     } catch (error) {
       console.error("Image upload failed:", error)
@@ -343,9 +333,10 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                           />
                           <div className="flex gap-2">
                             <ImageUpload
-                              onUpload={(file) =>
-                                handleImageUpload(file, (updater) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: updater(item.content || "") } : item))))
-                              }
+                              onUpload={(file) => {
+                                setActiveSectionId(section.id)
+                                handleImageUpload(file)
+                              }}
                             />
                             <Button
                               variant="outline"
@@ -358,10 +349,45 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                               <FileDiff className="h-4 w-4 mr-1" />
                               Add Code
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSections((current) => {
+                                  const index = current.findIndex((s) => s.id === section.id)
+                                  const newSections = [...current]
+                                  newSections.splice(index + 1, 0, {
+                                    id: crypto.randomUUID(),
+                                    type: "markdown",
+                                    content: "",
+                                    role: "details",
+                                  })
+                                  return newSections
+                                })
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              New Section
+                            </Button>
                           </div>
                         </div>
                       )}
                       {section.type === "diff" && section.file && <CommitDiff files={[section.file]} defaultRenderDiff={false} theme={theme} />}
+                      {section.type === "code" && section.file && (
+                        <div className="relative font-mono text-sm p-4 bg-muted rounded-lg">
+                          <pre>{section.file.newValue}</pre>
+                        </div>
+                      )}
+                      {section.type === "file-link" && section.file && (
+                        <a
+                          href={`https://github.com/${fullName}/blob/${commit.sha}/${section.file.filename}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-500 hover:underline"
+                        >
+                          View {section.file.filename} on GitHub
+                        </a>
+                      )}
                     </SortableItem>
                   ))}
                 </SortableContext>
@@ -389,7 +415,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           </div>
         </div>
         <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
-          <ThreadPreview title={title} sections={sections} theme={theme} />
+          <ThreadPreview title={title} sections={sections} theme={theme} fullName={fullName} commit={commit} />
         </div>
       </div>
 
@@ -400,15 +426,15 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           setActiveSectionId(undefined)
         }}
         files={files}
-        onSelect={(selectedFiles) => {
+        onSelect={(selections) => {
           setSections((current) => {
             const index = current.findIndex((s) => s.id === activeSectionId)
             const newSections = [...current]
-            selectedFiles.forEach((file, i) => {
+            selections.forEach((selection, i) => {
               newSections.splice(index + 1 + i, 0, {
                 id: crypto.randomUUID(),
-                type: "diff",
-                file,
+                type: selection.type === "link" ? "file-link" : selection.type,
+                file: selection.file,
               })
             })
             return newSections

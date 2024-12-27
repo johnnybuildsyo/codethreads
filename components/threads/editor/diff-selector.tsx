@@ -4,16 +4,19 @@ import { Button } from "@/components/ui/button"
 import { shouldExcludeFile } from "@/lib/utils"
 import { useState } from "react"
 import { CheckSquare, Square } from "lucide-react"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 
 interface DiffSelectorProps {
   open: boolean
   onClose: () => void
   files: FileChange[]
-  onSelect: (files: FileChange[]) => void
+  onSelect: (files: { file: FileChange; type: "diff" | "code" | "link" }[]) => void
 }
 
 export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
+  const [codeType, setCodeType] = useState<"diff" | "code" | "link">("diff")
   const filteredFiles = files.filter((f) => !shouldExcludeFile(f.filename))
 
   const handleToggle = (filename: string) => {
@@ -30,8 +33,27 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
 
   const handleAdd = () => {
     const filesToAdd = filteredFiles.filter((f) => selectedFiles.has(f.filename))
-    onSelect(filesToAdd)
+    onSelect(
+      filesToAdd.map((file) => ({
+        file,
+        type: codeType,
+      }))
+    )
     setSelectedFiles(new Set())
+  }
+
+  const getButtonText = (count: number, type: "diff" | "code" | "link") => {
+    if (count === 0) return "Add"
+
+    const suffix = count === 1 ? "" : "s"
+    switch (type) {
+      case "diff":
+        return `Add ${count} Diff${suffix}`
+      case "code":
+        return `Add ${count} Code Block${suffix}`
+      case "link":
+        return `Add ${count} Link${suffix}`
+    }
   }
 
   return (
@@ -40,6 +62,22 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
         <DialogHeader>
           <DialogTitle>Add Code Changes</DialogTitle>
         </DialogHeader>
+
+        <RadioGroup value={codeType} onValueChange={(value) => setCodeType(value as "diff" | "code" | "link")} className="mb-4">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="diff" id="diff" />
+            <Label htmlFor="diff">Show diff</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="code" id="code" />
+            <Label htmlFor="code">Show code</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="link" id="link" />
+            <Label htmlFor="link">Link to file</Label>
+          </div>
+        </RadioGroup>
+
         <div className="grid gap-1 max-h-[50vh] overflow-y-auto border rounded-md">
           {filteredFiles.map((file) => (
             <Button key={file.filename} variant="ghost" className="justify-start font-mono text-xs h-auto py-2" onClick={() => handleToggle(file.filename)}>
@@ -61,7 +99,7 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
               Cancel
             </Button>
             <Button onClick={handleAdd} disabled={selectedFiles.size === 0}>
-              Add {selectedFiles.size} {selectedFiles.size === 1 ? "Diff" : "Diffs"}
+              {getButtonText(selectedFiles.size, codeType)}
             </Button>
           </div>
         </DialogFooter>

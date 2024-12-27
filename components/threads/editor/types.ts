@@ -9,8 +9,10 @@ export interface FileChange {
 
 export interface ThreadSection {
   id: string
-  type: "intro" | "diff" | "markdown" | "summary"
+  type: "intro" | "diff" | "markdown" | "image" | "code" | "file-link"
   content?: string
   file?: FileChange
-  afterFile?: string
+  role?: "intro" | "details" | "summary"
+  imageUrl?: string
+  codeType?: "diff" | "code" | "link"
 } 
