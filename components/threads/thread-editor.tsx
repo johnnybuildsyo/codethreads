@@ -14,7 +14,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { SortableItem } from "./editor/sortable-item"
 import { AIConnect } from "./editor/ai-connect"
 import { generateThreadIdeas } from "@/lib/ai/threads/actions"
-// import { getStreamingText } from "@/app/api/ai/util"
+import { getStreamingText } from "@/app/api/ai/util"
 import { toast } from "sonner"
 import { readStreamableValue } from "ai/rsc"
 import { ThreadPreview } from "./editor/thread-preview"
@@ -26,6 +26,7 @@ import { cn, shouldExcludeFile } from "@/lib/utils"
 import { CommitDiff } from "./editor/commit-diff"
 import { FileChange, ThreadSection } from "./editor/types"
 import { ThreadIdeas } from "./editor/thread-ideas"
+import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
 
 interface ThreadEditorProps {
   projectId: string
@@ -178,6 +179,21 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
+  const generateMarkdownSection = async (section: ThreadSection) => {
+    const prompt = generateSectionPrompt({
+      section,
+      title,
+      sections,
+      codeChanges,
+    })
+
+    const updateSectionContent = (content: string) => {
+      setSections((current) => current.map((s) => (s.id === section.id ? { ...s, content: content } : s)))
+    }
+
+    await getStreamingText(prompt, updateSectionContent)
+  }
+
   const handleImageUpload = async (file: File) => {
     try {
       const formData = new FormData()
@@ -255,7 +271,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                             <Button variant="ghost" className="h-6 w-6 p-0" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
                               <X className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" className="h-6 w-6 p-0 border-yellow-500/30 hover:animate-pulse" onClick={() => console.log("do ai stuff")}>
+                            <Button variant="outline" className="h-6 w-6 p-0 border-yellow-500/30 hover:animate-pulse" onClick={() => generateMarkdownSection(section)}>
                               <SparklesIcon className="h-4 w-4 text-yellow-500" />
                             </Button>
                           </div>
