@@ -15,4 +15,5 @@ export interface ThreadSection {
   role?: "intro" | "details" | "summary"
   imageUrl?: string
   codeType?: "diff" | "code" | "link"
+  isCollapsed?: boolean
 } 

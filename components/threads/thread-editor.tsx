@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff, Plus } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -22,7 +22,7 @@ import { ThreadProvider } from "./editor/thread-context"
 import { CommitInfo } from "./editor/commit-info"
 import { ImageUpload } from "./editor/image-upload"
 import { DiffSelector } from "./editor/diff-selector"
-import { shouldExcludeFile } from "@/lib/utils"
+import { cn, shouldExcludeFile } from "@/lib/utils"
 import { CommitDiff } from "./editor/commit-diff"
 import { FileChange, ThreadSection } from "./editor/types"
 
@@ -170,19 +170,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         return arrayMove(items, oldIndex, newIndex)
       })
     }
-  }
-
-  const addMarkdownSection = (afterId: string) => {
-    setSections((current) => {
-      const index = current.findIndex((s) => s.id === afterId)
-      const newSections = [...current]
-      newSections.splice(index + 1, 0, {
-        id: crypto.randomUUID(),
-        type: "markdown",
-        content: "",
-      })
-      return newSections
-    })
   }
 
   const generateIdeas = async () => {
@@ -374,8 +361,23 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                       )}
                       {section.type === "diff" && section.file && <CommitDiff files={[section.file]} defaultRenderDiff={false} theme={theme} />}
                       {section.type === "code" && section.file && (
-                        <div className="relative font-mono text-sm p-4 bg-muted rounded-lg">
-                          <pre>{section.file.newValue}</pre>
+                        <div className="relative font-mono text-sm bg-muted rounded-lg">
+                          <div className={cn("flex justify-between items-center text-xs text-muted-foreground px-4", section.isCollapsed ? "py-1" : "py-2")}>
+                            <span>{section.file.filename}</span>
+                            <Button variant="ghost" size="sm" onClick={() => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, isCollapsed: !item.isCollapsed } : item)))}>
+                              {section.isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          {!section.isCollapsed && (
+                            <div className="p-4 pt-0">
+                              <Textarea
+                                value={section.file.newValue}
+                                onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, file: { ...item.file!, newValue: e.target.value } } : item)))}
+                                className="font-mono text-sm min-h-[200px] bg-transparent border-none focus-visible:ring-0 p-0 resize-none"
+                                spellCheck={false}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                       {section.type === "file-link" && section.file && (
