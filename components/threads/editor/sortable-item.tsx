@@ -1,23 +1,53 @@
 import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { ThreadSection } from "./types"
+import type { CSSProperties } from "react"
+import { useEffect, useRef, useState } from "react"
 
-export const SortableItem = ({ section, children }: { section: ThreadSection; children: React.ReactNode }) => {
+interface SortableItemProps {
+  section: ThreadSection
+  children: React.ReactNode
+}
+
+export function SortableItem({ section, children }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
+  const [height, setHeight] = useState<number>()
+  const ref = useRef<HTMLDivElement>(null)
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
+  // Capture height before dragging starts
+  useEffect(() => {
+    if (ref.current && !height) {
+      setHeight(ref.current.offsetHeight)
+    }
+  }, [height])
+
+  const style: CSSProperties = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(1)` : undefined,
     transition,
-    height: isDragging && section.type === "diff" ? "300px" : "auto",
+    zIndex: isDragging ? 50 : undefined,
+    position: isDragging ? ("relative" as const) : undefined,
+    height: isDragging ? height : undefined,
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="relative">
-      <div {...attributes} {...listeners} className="absolute -left-8 top-2 cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity">
+    <div ref={mergeRefs([ref, setNodeRef])} style={style} className="relative group">
+      {children}
+      <div {...attributes} {...listeners} className="absolute -left-8 top-2 opacity-50 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
-      {children}
     </div>
   )
+}
+
+// Helper to merge refs
+const mergeRefs = (refs: any[]) => {
+  return (value: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(value)
+      } else if (ref != null) {
+        ref.current = value
+      }
+    })
+  }
 }

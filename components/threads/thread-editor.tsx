@@ -71,8 +71,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-  const [isDragging, setIsDragging] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [aiEnabled] = useState(true)
   const [threadIdeas, setThreadIdeas] = useState<string[]>([])
   const [activeSectionId, setActiveSectionId] = useState<string>()
@@ -158,9 +156,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   }, [selectedDiffs])
 
-  const handleDragStart = () => setIsDragging(true)
   const handleDragEnd = (event: any) => {
-    setIsDragging(false)
     const { active, over } = event
 
     if (active.id !== over.id) {
@@ -276,15 +272,11 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <Button variant="outline" onClick={generateIdeas} disabled={!aiEnabled || isGenerating}>
-              {isGenerating ? (
-                <span className="animate-pulse">Generating...</span>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2 text-yellow-500" />
-                  AI Assist
-                </>
-              )}
+            <Button variant="outline" onClick={generateIdeas}>
+              <>
+                <Sparkles className="h-4 w-4 mr-2 text-yellow-500" />
+                AI Assist
+              </>
             </Button>
             <Tabs className="2xl:hidden" value={view} onValueChange={(v) => setView(v as "edit" | "preview")}>
               <TabsList>
@@ -296,9 +288,9 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
           {view === "edit" ? (
             <>
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={sections} strategy={verticalListSortingStrategy}>
-                  {sections.map((section, index) => (
+                  {sections.map((section) => (
                     <SortableItem key={section.id} section={section}>
                       {section.type === "markdown" && (
                         <div className="relative mt-2">
