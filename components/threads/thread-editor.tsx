@@ -16,7 +16,6 @@ import { AIConnect } from "./editor/ai-connect"
 import { generateThreadIdeas } from "@/lib/ai/threads/actions"
 import { toast } from "sonner"
 import { readStreamableValue } from "ai/rsc"
-import { Card, CardContent, CardTitle } from "../ui/card"
 import { ThreadPreview } from "./editor/thread-preview"
 import { ThreadProvider } from "./editor/thread-context"
 import { CommitInfo } from "./editor/commit-info"
@@ -25,6 +24,7 @@ import { DiffSelector } from "./editor/diff-selector"
 import { cn, shouldExcludeFile } from "@/lib/utils"
 import { CommitDiff } from "./editor/commit-diff"
 import { FileChange, ThreadSection } from "./editor/types"
+import { ThreadIdeas } from "./editor/thread-ideas"
 
 interface ThreadEditorProps {
   projectId: string
@@ -156,13 +156,13 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     })
   }, [selectedDiffs])
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (active.id !== over.id) {
+    if (active.id !== over?.id) {
       setSections((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id)
-        const newIndex = items.findIndex((i) => i.id === over.id)
+        const newIndex = items.findIndex((i) => i.id === over?.id)
         return arrayMove(items, oldIndex, newIndex)
       })
     }
@@ -217,51 +217,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             <AIConnect enabled={aiEnabled} />
           </div>
 
-          {threadIdeas.length > 0 && (
-            <Card>
-              <div className="flex items-center justify-between px-4 py-2 border-b">
-                <CardTitle className="text-sm font-medium">AI Generated Thread Ideas</CardTitle>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setThreadIdeas([])}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <CardContent className="p-2">
-                <div className="flex flex-wrap justify-center">
-                  {threadIdeas.map((idea) => (
-                    <div className="w-1/3" key={idea}>
-                      <div className="p-2 h-full">
-                        <div className="flex flex-col justify-between border text-sm rounded-lg p-2 space-y-2 h-full">
-                          <p className="text-center text-balance grow">{idea}</p>
-                          <div className="flex justify-center">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="px-12 text-xs inline-block"
-                              onClick={() => {
-                                setTitle(idea)
-                                setThreadIdeas([])
-                              }}
-                            >
-                              Select Title
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-center text-lg py-8">
-                  <div>Choose a title</div>
-                  <div className="text-sm">
-                    or{" "}
-                    <button className="underline" onClick={generateIdeas}>
-                      try again
-                    </button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {threadIdeas.length > 0 && <ThreadIdeas ideas={threadIdeas} onClose={() => setThreadIdeas([])} />}
 
           <CommitInfo commit={commit} files={files} fullName={fullName} />
 
