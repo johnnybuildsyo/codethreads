@@ -54,3 +54,7 @@ I came up with the idea for Code Threads when I was [live posting to Bluesky](ht
 V0 makes it really easy to spin up UI so I gave it a prompt:
 
 > Landing page for Code Threads, a site for live coding in post thread format. Share and learn with the community as you build in public.
+
+![](https://d22ircbunvt96b.cloudfront.net/thread-images/johnnybuilds/1735266557154.png)
+
+It spit out a landing page with Header, Hero, Features, HowItWorks, CommunityShowcase, CallToAction and Footer composed of Shadcn UI components.

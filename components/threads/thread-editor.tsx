@@ -237,7 +237,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
-  const handleImageUpload = async (file: File, updateContent: (content: string) => void) => {
+  const handleImageUpload = async (file: File, updateContent: (updater: (current: string) => string) => void) => {
     try {
       const formData = new FormData()
       formData.append("file", file)
@@ -247,13 +247,9 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error("Upload failed")
-      }
+      if (!response.ok) throw new Error("Upload failed")
 
       const { image_url } = await response.json()
-
-      // Add image markdown at the end of the content
       updateContent((current) => {
         const newContent = current.trim()
         return newContent ? `${newContent}\n\n![](${image_url})` : `![](${image_url})`
@@ -400,7 +396,11 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                             placeholder="Add notes about these changes..."
                             rows={2}
                           />
-                          <ImageUpload onUpload={(file) => handleImageUpload(file, (content) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content } : item))))} />
+                          <ImageUpload
+                            onUpload={(file) =>
+                              handleImageUpload(file, (updater) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: updater(item.content || "") } : item))))
+                            }
+                          />
                         </div>
                       )}
                       {section.type === "summary" && (
