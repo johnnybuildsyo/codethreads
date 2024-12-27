@@ -281,7 +281,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                 <span className="animate-pulse">Generating...</span>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <Sparkles className="h-4 w-4 mr-2 text-yellow-500" />
                   AI Assist
                 </>
               )}
