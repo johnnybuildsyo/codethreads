@@ -5,13 +5,13 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 
 interface NewThreadPageProps {
-  params: {
+  params: Promise<{
     username: string
     projectId: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     commit: string
-  }
+  }>
 }
 
 export default async function NewThreadPage({ params, searchParams }: NewThreadPageProps) {
