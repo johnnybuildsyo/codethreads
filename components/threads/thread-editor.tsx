@@ -50,7 +50,7 @@ interface ThreadSection {
   type: "diff" | "markdown"
   content?: string
   file?: FileChange
-  afterFile?: string
+  role?: "intro" | "details" | "summary"
 }
 
 export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
@@ -66,6 +66,19 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       id: crypto.randomUUID(),
       type: "markdown",
       content: "",
+      role: "intro",
+    },
+    {
+      id: crypto.randomUUID(),
+      type: "markdown",
+      content: "",
+      role: "details",
+    },
+    {
+      id: crypto.randomUUID(),
+      type: "markdown",
+      content: "",
+      role: "summary",
     },
   ])
   const sensors = useSensors(
@@ -319,8 +332,14 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                             className="mb-2"
                             value={section.content}
                             onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: e.target.value } : item)))}
-                            placeholder="Write a post..."
-                            rows={2}
+                            placeholder={
+                              section.role === "intro"
+                                ? "Start with what problem you're solving or what feature you're adding. What motivated these changes?"
+                                : section.role === "summary"
+                                ? "Wrap up with the key benefits and any next steps. What impact will these changes have?"
+                                : "Explain the technical details. What approach did you take and why? What were the key decisions?"
+                            }
+                            rows={section.role === "details" ? 4 : 3}
                           />
                           <div className="flex gap-2">
                             <ImageUpload
