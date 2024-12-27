@@ -21,6 +21,7 @@ import { toast } from "sonner"
 import { readStreamableValue } from "ai/rsc"
 import { Card, CardContent, CardTitle } from "../ui/card"
 import { ThreadPreview } from "./editor/thread-preview"
+import { ThreadProvider } from "./editor/thread-context"
 
 interface ThreadEditorProps {
   projectId: string
@@ -235,205 +236,207 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   return (
-    <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
-      <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
-        <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-bold">Create Thread</h3>
-          <AIConnect enabled={aiEnabled} />
-        </div>
+    <ThreadProvider>
+      <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
+        <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold">Create Thread</h3>
+            <AIConnect enabled={aiEnabled} />
+          </div>
 
-        {threadIdeas.length > 0 && (
-          <Card>
-            <div className="flex items-center justify-between px-4 py-2 border-b">
-              <CardTitle className="text-sm font-medium">AI Generated Thread Ideas</CardTitle>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setThreadIdeas([])}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <CardContent className="p-2">
-              <div className="flex flex-wrap justify-center">
-                {threadIdeas.map((idea) => (
-                  <div className="w-1/3" key={idea}>
-                    <div className="p-2 h-full">
-                      <div className="flex flex-col justify-between border text-sm rounded-lg p-2 space-y-2 h-full">
-                        <p className="text-center text-balance grow">{idea}</p>
-                        <div className="flex justify-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="px-12 text-xs inline-block"
-                            onClick={() => {
-                              setTitle(idea)
-                              setThreadIdeas([])
-                            }}
-                          >
-                            Select Title
-                          </Button>
+          {threadIdeas.length > 0 && (
+            <Card>
+              <div className="flex items-center justify-between px-4 py-2 border-b">
+                <CardTitle className="text-sm font-medium">AI Generated Thread Ideas</CardTitle>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setThreadIdeas([])}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardContent className="p-2">
+                <div className="flex flex-wrap justify-center">
+                  {threadIdeas.map((idea) => (
+                    <div className="w-1/3" key={idea}>
+                      <div className="p-2 h-full">
+                        <div className="flex flex-col justify-between border text-sm rounded-lg p-2 space-y-2 h-full">
+                          <p className="text-center text-balance grow">{idea}</p>
+                          <div className="flex justify-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="px-12 text-xs inline-block"
+                              onClick={() => {
+                                setTitle(idea)
+                                setThreadIdeas([])
+                              }}
+                            >
+                              Select Title
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                <div className="text-center text-lg py-8">
+                  <div>Choose a title</div>
+                  <div className="text-sm">
+                    or{" "}
+                    <button className="underline" onClick={generateIdeas}>
+                      try again
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <p className="text-sm text-muted-foreground mb-4">
+            Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
+          </p>
+
+          <div className="flex gap-4 items-center mb-4">
+            <Input
+              className="!text-2xl font-bold border-t-0 shadow-none border-l-0 border-r-0 rounded-none border-b-foreground/20 pl-1 !focus:outline-none !focus-visible:ring-0 focus:border-b-foreground !ring-0"
+              placeholder="Thread title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <Button variant="outline" onClick={generateIdeas} disabled={!aiEnabled || isGenerating}>
+              {isGenerating ? (
+                <span className="animate-pulse">Generating...</span>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Assist
+                </>
+              )}
+            </Button>
+            <Tabs className="2xl:hidden" value={view} onValueChange={(v) => setView(v as "edit" | "preview")}>
+              <TabsList>
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {view === "edit" ? (
+            <>
+              <div className="space-y-2 py-4">
+                <h4 className="text-sm font-medium">Included Commits to Files...</h4>
+                <div className="flex flex-wrap gap-2">
+                  {files.map((file) => (
+                    <Button
+                      key={file.filename}
+                      variant={selectedFiles.has(file.filename) ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => toggleFile(file.filename)}
+                      className="text-xs flex items-center gap-1.5"
+                    >
+                      {selectedFiles.has(file.filename) ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
+                      {file.filename}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <SortableContext items={sections} strategy={verticalListSortingStrategy}>
+                  {sections.map((section, index) => (
+                    <SortableItem key={section.id} section={section}>
+                      {section.type === "intro" && (
+                        <div className="relative">
+                          {showIntro ? (
+                            <>
+                              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={intro} onChange={(e) => setIntro(e.target.value)} rows={3} />
+                            </>
+                          ) : (
+                            <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add introduction
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      {section.type === "diff" && section.file && (
+                        <>
+                          <div className="border rounded-lg p-4 bg-muted/50">
+                            <CommitDiff files={[section.file]} theme={theme} onRemove={() => toggleFile(section.file!.filename)} />
+                          </div>
+                          {!isDragging && index < sections.length - 2 && (
+                            <div className="flex justify-center">
+                              <Button variant="ghost" onClick={() => addMarkdownSection(section.id)} className="mt-4">
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add markdown
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {section.type === "markdown" && (
+                        <div className="relative mt-2">
+                          <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Textarea
+                            value={section.content}
+                            onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: e.target.value } : item)))}
+                            placeholder="Add notes about these changes..."
+                            rows={2}
+                          />
+                        </div>
+                      )}
+                      {section.type === "summary" && (
+                        <div className="relative">
+                          {showSummary ? (
+                            <>
+                              <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowSummary(false)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
+                            </>
+                          ) : (
+                            <Button variant="ghost" className="w-full" onClick={() => setShowSummary(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add summary
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </SortableItem>
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </>
+          ) : (
+            <div className="prose dark:prose-invert max-w-none">
+              {showIntro && <ReactMarkdown>{intro || "No introduction yet"}</ReactMarkdown>}
+              {sections
+                .filter((s) => s.type === "diff")
+                .map((section) => (
+                  <div key={section.id} className="not-prose">
+                    {section.file && <CommitDiff files={[section.file]} theme={theme} />}
                   </div>
                 ))}
-              </div>
-              <div className="text-center text-lg py-8">
-                <div>Choose a title</div>
-                <div className="text-sm">
-                  or{" "}
-                  <button className="underline" onClick={generateIdeas}>
-                    try again
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <p className="text-sm text-muted-foreground mb-4">
-          Write (in Markdown) about the changes in commit: <code className="text-xs">{commit.sha.slice(0, 7)}</code>
-        </p>
-
-        <div className="flex gap-4 items-center mb-4">
-          <Input
-            className="!text-2xl font-bold border-t-0 shadow-none border-l-0 border-r-0 rounded-none border-b-foreground/20 pl-1 !focus:outline-none !focus-visible:ring-0 focus:border-b-foreground !ring-0"
-            placeholder="Thread title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <Button variant="outline" onClick={generateIdeas} disabled={!aiEnabled || isGenerating}>
-            {isGenerating ? (
-              <span className="animate-pulse">Generating...</span>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                AI Assist
-              </>
-            )}
-          </Button>
-          <Tabs className="2xl:hidden" value={view} onValueChange={(v) => setView(v as "edit" | "preview")}>
-            <TabsList>
-              <TabsTrigger value="edit">Edit</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {view === "edit" ? (
-          <>
-            <div className="space-y-2 py-4">
-              <h4 className="text-sm font-medium">Included Commits to Files...</h4>
-              <div className="flex flex-wrap gap-2">
-                {files.map((file) => (
-                  <Button
-                    key={file.filename}
-                    variant={selectedFiles.has(file.filename) ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => toggleFile(file.filename)}
-                    className="text-xs flex items-center gap-1.5"
-                  >
-                    {selectedFiles.has(file.filename) ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
-                    {file.filename}
-                  </Button>
-                ))}
-              </div>
+              {showSummary && <ReactMarkdown>{summary || "No summary yet"}</ReactMarkdown>}
             </div>
+          )}
 
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-              <SortableContext items={sections} strategy={verticalListSortingStrategy}>
-                {sections.map((section, index) => (
-                  <SortableItem key={section.id} section={section}>
-                    {section.type === "intro" && (
-                      <div className="relative">
-                        {showIntro ? (
-                          <>
-                            <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={intro} onChange={(e) => setIntro(e.target.value)} rows={3} />
-                          </>
-                        ) : (
-                          <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add introduction
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                    {section.type === "diff" && section.file && (
-                      <>
-                        <div className="border rounded-lg p-4 bg-muted/50">
-                          <CommitDiff files={[section.file]} theme={theme} onRemove={() => toggleFile(section.file!.filename)} />
-                        </div>
-                        {!isDragging && index < sections.length - 2 && (
-                          <div className="flex justify-center">
-                            <Button variant="ghost" onClick={() => addMarkdownSection(section.id)} className="mt-4">
-                              <Plus className="h-3 w-3 mr-1" />
-                              Add markdown
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {section.type === "markdown" && (
-                      <div className="relative mt-2">
-                        <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <Textarea
-                          value={section.content}
-                          onChange={(e) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content: e.target.value } : item)))}
-                          placeholder="Add notes about these changes..."
-                          rows={2}
-                        />
-                      </div>
-                    )}
-                    {section.type === "summary" && (
-                      <div className="relative">
-                        {showSummary ? (
-                          <>
-                            <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowSummary(false)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
-                          </>
-                        ) : (
-                          <Button variant="ghost" className="w-full" onClick={() => setShowSummary(true)}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add summary
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </SortableItem>
-                ))}
-              </SortableContext>
-            </DndContext>
-          </>
-        ) : (
-          <div className="prose dark:prose-invert max-w-none">
-            {showIntro && <ReactMarkdown>{intro || "No introduction yet"}</ReactMarkdown>}
-            {sections
-              .filter((s) => s.type === "diff")
-              .map((section) => (
-                <div key={section.id} className="not-prose">
-                  {section.file && <CommitDiff files={[section.file]} theme={theme} />}
-                </div>
-              ))}
-            {showSummary && <ReactMarkdown>{summary || "No summary yet"}</ReactMarkdown>}
+          <div className="flex justify-end space-x-2">
+            <Button variant="ghost" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={!title || !intro || !summary || isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Thread"}
+            </Button>
           </div>
-        )}
-
-        <div className="flex justify-end space-x-2">
-          <Button variant="ghost" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!title || !intro || !summary || isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Thread"}
-          </Button>
+        </div>
+        <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
+          <ThreadPreview title={title} intro={intro} sections={sections} summary={summary} theme={theme} showIntro={showIntro} showSummary={showSummary} />
         </div>
       </div>
-      <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
-        <ThreadPreview title={title} intro={intro} sections={sections} summary={summary} theme={theme} showIntro={showIntro} showSummary={showSummary} />
-      </div>
-    </div>
+    </ThreadProvider>
   )
 }

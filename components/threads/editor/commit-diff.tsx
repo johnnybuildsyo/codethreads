@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import DiffViewer from "react-diff-viewer-continued"
 import { useInView } from "react-intersection-observer"
+import { useThreadContext } from "./thread-context"
 
 interface FileChange {
   filename: string
@@ -14,10 +15,14 @@ interface FileChange {
 }
 
 export const CommitDiff = memo(({ files, theme, onRemove }: { files: FileChange[]; theme: string | undefined; onRemove?: (filename: string) => void }) => {
+  const { activeView } = useThreadContext()
   const { ref, inView } = useInView({
     threshold: 0,
     triggerOnce: true,
   })
+
+  // Only render diff viewer in active view
+  const shouldRenderDiff = inView && ((!onRemove && activeView === "preview") || (onRemove && activeView === "editor"))
 
   return (
     <div ref={ref} className="space-y-4">
@@ -35,7 +40,7 @@ export const CommitDiff = memo(({ files, theme, onRemove }: { files: FileChange[
             </span>
           </div>
           <div className="max-h-[300px] overflow-auto text-[13px]">
-            {inView && (
+            {shouldRenderDiff && (
               <DiffViewer
                 oldValue={file.oldValue}
                 newValue={file.newValue}
