@@ -18,3 +18,27 @@ export const shouldExcludeFile = (filename: string): boolean => {
 
   return excludePatterns.some((pattern) => pattern.test(filename))
 }
+
+export function getLanguageFromFilename(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase()
+  switch (ext) {
+    case 'js': return 'javascript'
+    case 'jsx': return 'jsx'
+    case 'ts': return 'typescript'
+    case 'tsx': return 'tsx'
+    case 'py': return 'python'
+    case 'rb': return 'ruby'
+    case 'go': return 'go'
+    case 'java': return 'java'
+    case 'php': return 'php'
+    case 'css': return 'css'
+    case 'html': return 'html'
+    case 'json': return 'json'
+    case 'yml':
+    case 'yaml': return 'yaml'
+    case 'md': return 'markdown'
+    case 'sql': return 'sql'
+    case 'sh': return 'bash'
+    default: return 'text'
+  }
+}

@@ -2,6 +2,9 @@ import { CommitDiff } from "./commit-diff"
 import ReactMarkdown from "react-markdown"
 import { ThreadSection } from "./types"
 import { ThreadProvider } from "./thread-context"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { getLanguageFromFilename } from "@/lib/utils"
 
 interface ThreadPreviewProps {
   title: string
@@ -46,9 +49,13 @@ export function ThreadPreview({ title, sections, theme, fullName, commit }: Thre
                 </a>
               )}
               {section.type === "code" && section.file && (
-                <div className="relative font-mono text-sm p-4 bg-muted rounded-lg mb-4">
-                  <div className="text-xs text-muted-foreground mb-2">{section.file.filename}</div>
-                  <pre className="overflow-auto">{section.file.newValue}</pre>
+                <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
+                  <div className="text-xs text-muted-foreground p-4 pb-0">{section.file.filename}</div>
+                  <div className="overflow-auto">
+                    <SyntaxHighlighter language={getLanguageFromFilename(section.file.filename)} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
+                      {section.file.newValue}
+                    </SyntaxHighlighter>
+                  </div>
                 </div>
               )}
             </div>
