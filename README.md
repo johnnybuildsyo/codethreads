@@ -47,3 +47,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 
 Thread title:
 Building a New Build In Public Writing Tool (in public)
+
+Intro:
+I came up with the idea for Code Threads when I was [live posting to Bluesky](https://bsky.app/profile/johnnybuilds.bsky.social/post/3lct4orsaqc25) some code for a project. It was a lot of fun so I began to think about building a tool to make creating content like this easier. 
+
+V0 makes it really easy to spin up UI so I gave it a prompt:
+
+> Landing page for Code Threads, a site for live coding in post thread format. Share and learn with the community as you build in public.
