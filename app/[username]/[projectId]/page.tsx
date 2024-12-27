@@ -8,10 +8,10 @@ import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
 
 interface ProjectPageProps {
-  params: {
+  params: Promise<{
     username: string
     projectId: string
-  }
+  }>
 }
 
 async function getGitHubStats(fullRepoName: string, token: string) {
@@ -45,7 +45,7 @@ async function getGitHubStats(fullRepoName: string, token: string) {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { username, projectId } = params
+  const { username, projectId } = await params
   const supabase = await createClient()
 
   const [
