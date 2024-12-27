@@ -40,13 +40,13 @@ export function SortableItem({ section, children }: SortableItemProps) {
 }
 
 // Helper to merge refs
-const mergeRefs = (refs: any[]) => {
-  return (value: any) => {
+const mergeRefs = <T extends any>(refs: (React.MutableRefObject<T> | React.RefCallback<T> | null)[]) => {
+  return (value: T | null) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
-        ref(value)
+        ;(ref as React.RefCallback<T>)(value)
       } else if (ref != null) {
-        ref.current = value
+        ;(ref as React.MutableRefObject<T | null>).current = value
       }
     })
   }
