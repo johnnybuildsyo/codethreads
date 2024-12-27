@@ -10,9 +10,6 @@ export default function Hero() {
         </p>
         <div className="mt-8 flex justify-center space-x-4">
           <Button size="lg">Get Started</Button>
-          <Button size="lg" variant="outline">
-            Learn More
-          </Button>
         </div>
       </div>
     </section>
