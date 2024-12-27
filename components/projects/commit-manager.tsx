@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { GitHubAuthGate } from "../auth/github-auth-gate"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
+import { Session } from "@supabase/supabase-js"
+
 interface Commit {
   sha: string
   commit: {
@@ -30,7 +32,7 @@ export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 

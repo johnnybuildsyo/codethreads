@@ -6,24 +6,11 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
-import type { Database } from "@/lib/supabase/database.types"
 
 interface ProjectPageProps {
   params: {
     username: string
     projectId: string
-  }
-}
-
-type Project = Database["public"]["Tables"]["projects"]["Row"] & {
-  display_name: string | null
-}
-
-type ProjectWithProfile = Project & {
-  profiles: {
-    name: string | null
-    username: string
-    avatar_url: string | null
   }
 }
 

@@ -9,11 +9,17 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { User } from "@supabase/supabase-js"
+
+interface Profile {
+  username: string
+  id: string
+}
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -24,11 +30,11 @@ export default function Header() {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      const currentUser = session?.user
+      const currentUser = session?.user ?? null
       setUser(currentUser)
 
       if (currentUser) {
-        const { data: profile } = await supabase.from("profiles").select("username").eq("id", currentUser.id).single()
+        const { data: profile } = await supabase.from("profiles").select("username, id").eq("id", currentUser.id).single()
         setProfile(profile)
       }
 
@@ -38,11 +44,11 @@ export default function Header() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        const currentUser = session?.user
+        const currentUser = session?.user ?? null
         setUser(currentUser)
 
         if (currentUser) {
-          const { data: profile } = await supabase.from("profiles").select("username").eq("id", currentUser.id).single()
+          const { data: profile } = await supabase.from("profiles").select("username, id").eq("id", currentUser.id).single()
           setProfile(profile)
         } else {
           setProfile(null)
