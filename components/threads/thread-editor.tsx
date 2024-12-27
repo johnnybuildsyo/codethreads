@@ -8,12 +8,13 @@ import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
 import { AIConnect } from "./editor/ai-connect"
 import { generateThreadIdeas } from "@/lib/ai/threads/actions"
+// import { getStreamingText } from "@/app/api/ai/util"
 import { toast } from "sonner"
 import { readStreamableValue } from "ai/rsc"
 import { ThreadPreview } from "./editor/thread-preview"
@@ -250,9 +251,14 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                     <SortableItem key={section.id} section={section}>
                       {section.type === "markdown" && (
                         <div className="relative mt-2">
-                          <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <div className="flex flex-col gap-2 absolute -right-8 px-1">
+                            <Button variant="ghost" className="h-6 w-6 p-0" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" className="h-6 w-6 p-0 border-yellow-500/30 hover:animate-pulse" onClick={() => console.log("do ai stuff")}>
+                              <SparklesIcon className="h-4 w-4 text-yellow-500" />
+                            </Button>
+                          </div>
                           <Textarea
                             className="mb-2"
                             value={section.content}
