@@ -46,4 +46,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 ## Testing
 
 Thread title:
-Building a new Build In Public Writing Tool (in public)
+Building a New Build In Public Writing Tool (in public)

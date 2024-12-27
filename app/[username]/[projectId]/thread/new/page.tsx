@@ -63,7 +63,7 @@ export default async function NewThreadPage({ params, searchParams }: NewThreadP
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-4 py-8 max-w-4xl 2xl:max-w-none w-full">
         <ThreadEditor projectId={project.id} commit={commit} fullName={project.full_name} />
       </main>
     </div>
