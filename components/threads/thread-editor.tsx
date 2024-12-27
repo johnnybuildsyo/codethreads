@@ -22,6 +22,7 @@ import { readStreamableValue } from "ai/rsc"
 import { Card, CardContent, CardTitle } from "../ui/card"
 import { ThreadPreview } from "./editor/thread-preview"
 import { ThreadProvider } from "./editor/thread-context"
+import { FileSelector } from "./editor/file-selector"
 
 interface ThreadEditorProps {
   projectId: string
@@ -321,23 +322,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
           {view === "edit" ? (
             <>
-              <div className="space-y-2 py-4">
-                <h4 className="text-sm font-medium">Included Commits to Files...</h4>
-                <div className="flex flex-wrap gap-2">
-                  {files.map((file) => (
-                    <Button
-                      key={file.filename}
-                      variant={selectedFiles.has(file.filename) ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => toggleFile(file.filename)}
-                      className="text-xs flex items-center gap-1.5"
-                    >
-                      {selectedFiles.has(file.filename) ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
-                      {file.filename}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <FileSelector files={files} selectedFiles={selectedFiles} onToggle={toggleFile} />
 
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <SortableContext items={sections} strategy={verticalListSortingStrategy}>
