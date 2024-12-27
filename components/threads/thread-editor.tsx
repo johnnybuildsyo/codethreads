@@ -9,7 +9,7 @@ import { useTheme } from "next-themes"
 import ReactMarkdown from "react-markdown"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { CheckSquare, Square, X, Plus, Sparkles } from "lucide-react"
+import { X, Plus, Sparkles } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CommitDiff } from "./editor/commit-diff"
@@ -23,6 +23,7 @@ import { Card, CardContent, CardTitle } from "../ui/card"
 import { ThreadPreview } from "./editor/thread-preview"
 import { ThreadProvider } from "./editor/thread-context"
 import { FileSelector } from "./editor/file-selector"
+import { ImageUpload } from "./editor/image-upload"
 
 interface ThreadEditorProps {
   projectId: string
@@ -236,6 +237,33 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     }
   }
 
+  const handleImageUpload = async (file: File, updateContent: (content: string) => void) => {
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
+      }
+
+      const { image_url } = await response.json()
+
+      // Add image markdown at the end of the content
+      updateContent((current) => {
+        const newContent = current.trim()
+        return newContent ? `${newContent}\n\n![](${image_url})` : `![](${image_url})`
+      })
+    } catch (error) {
+      console.error("Image upload failed:", error)
+      toast.error("Failed to upload image. Please try again.")
+    }
+  }
+
   return (
     <ThreadProvider>
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
@@ -329,13 +357,14 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                   {sections.map((section, index) => (
                     <SortableItem key={section.id} section={section}>
                       {section.type === "intro" && (
-                        <div className="relative">
+                        <div className="relative space-y-2">
                           {showIntro ? (
                             <>
                               <Button variant="ghost" className="absolute -right-8 h-6 w-6 px-1" onClick={() => setShowIntro(false)}>
                                 <X className="h-4 w-4" />
                               </Button>
                               <Textarea className="font-mono" placeholder="Introduce the changes you're making..." value={intro} onChange={(e) => setIntro(e.target.value)} rows={3} />
+                              <ImageUpload onUpload={(file) => handleImageUpload(file, setIntro)} />
                             </>
                           ) : (
                             <Button variant="ghost" className="w-full" onClick={() => setShowIntro(true)}>
@@ -371,6 +400,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                             placeholder="Add notes about these changes..."
                             rows={2}
                           />
+                          <ImageUpload onUpload={(file) => handleImageUpload(file, (content) => setSections((s) => s.map((item) => (item.id === section.id ? { ...item, content } : item))))} />
                         </div>
                       )}
                       {section.type === "summary" && (
@@ -381,6 +411,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                                 <X className="h-4 w-4" />
                               </Button>
                               <Textarea placeholder="Summarize the impact of these changes..." value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} />
+                              <ImageUpload onUpload={(file) => handleImageUpload(file, setSummary)} />
                             </>
                           ) : (
                             <Button variant="ghost" className="w-full" onClick={() => setShowSummary(true)}>
