@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { User } from "@supabase/supabase-js"
+import { signOut } from "@/lib/actions/auth"
 
 interface Profile {
   username: string
@@ -125,14 +126,17 @@ export default function Header() {
                       <Link href={`/${profile?.username}`}>My Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-red-600 focus:text-red-600"
-                      onClick={async () => {
-                        const supabase = createClient()
-                        await supabase.auth.signOut()
-                      }}
-                    >
-                      Sign Out
+                    <DropdownMenuItem className="text-red-600 focus:text-red-600" asChild>
+                      <form
+                        action={signOut}
+                        onSubmit={async (e) => {
+                          e.preventDefault()
+                          await signOut()
+                          window.location.href = "/"
+                        }}
+                      >
+                        <button className="w-full text-left">Sign Out</button>
+                      </form>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
