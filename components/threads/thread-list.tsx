@@ -8,8 +8,11 @@ interface Thread {
   id: string
   title: string
   created_at: string
-  published_at: string | null
-  sections: any[]
+  updated_at: string
+  project_id: string
+  teaser: string | null
+  published_at?: string | null
+  sections?: any[]
 }
 
 interface ThreadListProps {
