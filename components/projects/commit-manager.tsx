@@ -6,6 +6,8 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+
 interface Commit {
   sha: string
   commit: {
@@ -158,9 +160,11 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
             <p className="font-medium">{commit.commit.message.split("\n")[0]}</p>
             <p className="text-sm text-muted-foreground mt-1">{new Date(commit.commit.author.date).toLocaleDateString()}</p>
             <div className="mt-4 flex items-center space-x-2">
-              <Button onClick={() => handleAction(commit, "new")}>
-                <Plus className="h-4 w-4" />
-                Start CodeThread
+              <Button asChild>
+                <Link href={`${window.location.pathname}/thread/new?commit=${commit.sha}`}>
+                  <Plus className="h-4 w-4" />
+                  Start CodeThread
+                </Link>
               </Button>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
                 Ignore
