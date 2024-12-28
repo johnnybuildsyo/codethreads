@@ -45,7 +45,7 @@ export default async function NewThreadPage({ params, searchParams }: NewThreadP
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <h3 className="text-2xl font-bold mb-8">Create Thread</h3>
+          <h3 className="text-2xl font-bold mb-8">New CodeThread</h3>
           <GitHubAuthGate />
         </main>
       </div>

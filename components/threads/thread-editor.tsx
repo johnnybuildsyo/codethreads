@@ -244,7 +244,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
         <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">Create Thread</h3>
+            <h3 className="text-2xl font-bold">New CodeThread</h3>
             <AIConnect enabled={aiEnabled} />
           </div>
 

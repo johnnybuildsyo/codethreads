@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -158,7 +158,10 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
             <p className="font-medium">{commit.commit.message.split("\n")[0]}</p>
             <p className="text-sm text-muted-foreground mt-1">{new Date(commit.commit.author.date).toLocaleDateString()}</p>
             <div className="mt-4 flex items-center space-x-2">
-              <Button onClick={() => handleAction(commit, "new")}>New Thread</Button>
+              <Button onClick={() => handleAction(commit, "new")}>
+                <Plus className="h-4 w-4" />
+                Start CodeThread
+              </Button>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
                 Ignore
               </Button>

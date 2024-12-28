@@ -60,23 +60,21 @@ export function ProjectImport({ repos, onProjectSelect, isCreating }: ProjectImp
                 )
             )}
           </div>
-          <div className="flex justify-end space-x-4">
-            {selectedRepo && (
-              <Button variant="ghost" onClick={() => setSelectedRepo(null)}>
-                Go Back
-              </Button>
-            )}
-            <Button size="lg" disabled={!selectedRepo || isCreating} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
-              {isCreating ? (
-                <LoadingAnimation>Importing Project</LoadingAnimation>
-              ) : (
-                <>
-                  Import Project
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
+          {isCreating ? (
+            <LoadingAnimation className="w-full text-right p-2">Importing Project</LoadingAnimation>
+          ) : (
+            <div className="flex justify-end space-x-4">
+              {selectedRepo && (
+                <Button variant="ghost" onClick={() => setSelectedRepo(null)}>
+                  Go Back
+                </Button>
               )}
-            </Button>
-          </div>
+              <Button size="lg" disabled={!selectedRepo || isCreating} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
+                Import Project
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

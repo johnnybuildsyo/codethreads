@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import type { GithubRepo } from "@/types/github"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-
+import { LoadingAnimation } from "../ui/loading-animation"
 interface ProjectImportContainerProps {
   username: string
 }
@@ -117,7 +117,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
     }
   }
 
-  if (isLoading) return <div className="text-center py-8">Loading repositories...</div>
+  if (isLoading) return <LoadingAnimation className="w-full text-center pt-24">Loading repositories</LoadingAnimation>
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>
 
   return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={isCreating} />

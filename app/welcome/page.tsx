@@ -96,11 +96,6 @@ export default function WelcomePage() {
         </div>
         <h1 className="text-3xl font-bold mb-16 text-center">Welcome to CodeThreads!</h1>
         <div className="space-y-6">
-          <div className="text-center h-[124px] flex flex-col gap-2 justify-center items-center">
-            <AvatarUpload currentUrl={avatarUrl || user?.user_metadata?.avatar_url} onUpload={(url) => setAvatarUrl(url)} />
-            <p className="text-xl font-medium">{user?.user_metadata?.name || user?.user_metadata?.user_name}</p>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-2xl text-center block w-full py-4 font-extrabold">
