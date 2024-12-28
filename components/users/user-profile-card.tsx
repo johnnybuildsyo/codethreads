@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github, Twitter } from "lucide-react"
+import { Github, Twitter, Pencil } from "lucide-react"
 import Link from "next/link"
 
 interface UserProfileCardProps {
@@ -11,12 +11,19 @@ interface UserProfileCardProps {
   bio: string | null
   github: string | null
   twitter: string | null
+  isCurrentUser?: boolean
 }
 
-export function UserProfileCard({ name, username, avatar, bio, github, twitter }: UserProfileCardProps) {
+export function UserProfileCard({ name, username, avatar, bio, github, twitter, isCurrentUser }: UserProfileCardProps) {
   return (
     <Card className="md:col-span-1">
-      <CardHeader>
+      <CardHeader className="relative">
+        {isCurrentUser && (
+          <Link className="absolute top-2 right-2 text-xs flex items-center gap-1 px-2 py-1 rounded-md hover:ring-1 hover:ring-foreground/10" href={`/${username}/edit`}>
+            <span>edit</span>
+            <Pencil className="h-3 w-3 scale-75" />
+          </Link>
+        )}
         <div className="flex items-center space-x-4">
           <Avatar className="h-20 w-20">
             <AvatarImage src={avatar || undefined} alt={name || undefined} />
