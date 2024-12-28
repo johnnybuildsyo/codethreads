@@ -119,40 +119,48 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   const handleSubmit = async () => {
-    // setIsSubmitting(true)
+    setIsSubmitting(true)
+    const supabase = createClient()
 
-    console.log("handleSubmit sections", JSON.stringify({ projectId, title, sections }, null, 2))
+    try {
+      // Filter out any non-markdown sections that shouldn't be persisted
+      const cleanedSections = sections.map((section) => {
+        if (section.type === "markdown") {
+          return {
+            id: section.id,
+            type: section.type,
+            content: section.content,
+            role: section.role,
+          }
+        }
+        // For other types like "diff" or "code", just store minimal info
+        return {
+          id: section.id,
+          type: section.type,
+          filename: section.file?.filename,
+        }
+      })
 
-    // const supabase = createClient()
+      const { data: thread, error } = await supabase
+        .from("threads")
+        .insert({
+          project_id: projectId,
+          title,
+          sections: cleanedSections,
+          commit_sha: commit.sha,
+        })
+        .select()
+        .single()
 
-    // try {
-    //   const content = sections
-    //     .filter((s) => s.type === "markdown")
-    //     .map((s) => s.content)
-    //     .join("\n\n")
+      if (error) throw error
 
-    //   const { data: thread } = await supabase
-    //     .from("threads")
-    //     .insert({
-    //       project_id: projectId,
-    //       title,
-    //       teaser: content.slice(0, 280),
-    //     })
-    //     .select()
-    //     .single()
-
-    //   await supabase.from("posts").insert({
-    //     thread_id: thread.id,
-    //     intro: content,
-    //     commit_sha: commit.sha,
-    //   })
-
-    //   router.push(getProjectPath())
-    // } catch (error) {
-    //   console.error("Failed to create thread:", error)
-    // } finally {
-    //   setIsSubmitting(false)
-    // }
+      router.push(getProjectPath())
+    } catch (error) {
+      console.error("Failed to create thread:", error)
+      toast.error("Failed to create thread. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   useEffect(() => {
