@@ -41,7 +41,7 @@ export function UserProfileCard({ name, username, avatar, bio, github, twitter, 
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground mb-4">{bio}</p>
+        <p className="text-muted-foreground mb-4 text-sm">{bio}</p>
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`https://github.com/${github}`}>

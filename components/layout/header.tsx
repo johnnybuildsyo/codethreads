@@ -72,7 +72,7 @@ export default function Header() {
       <div className="container flex h-full items-center justify-between">
         <Link href="/" className="flex items-center space-x-3">
           <LogoIcon />
-          <span className="font-bold text-xl">Code Threads</span>
+          <span className="font-bold text-xl">CodeThreads</span>
         </Link>
 
         {!isLoading && (

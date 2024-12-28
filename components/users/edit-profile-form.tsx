@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { AvatarUpload } from "@/components/auth/avatar-upload"
 import Link from "next/link"
+import { LoadingAnimation } from "../ui/loading-animation"
 
 interface EditProfileFormProps {
   profile: {
@@ -54,7 +55,6 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
     } catch (error) {
       console.error("Failed to update profile:", error)
       toast.error("Failed to update profile")
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -84,12 +84,18 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
       </div>
 
       <div className="flex justify-end space-x-4">
-        <Link className="text-sm opacity-80 hover:opacity-100 flex items-center px-4 py-1 rounded-md" href={`/${profile.username}`}>
-          Cancel
-        </Link>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Changes"}
-        </Button>
+        {isSubmitting ? (
+          <LoadingAnimation className="text-sm">Saving Changes</LoadingAnimation>
+        ) : (
+          <>
+            <Link className="text-sm opacity-80 hover:opacity-100 flex items-center px-4 py-1 rounded-md" href={`/${profile.username}`}>
+              Cancel
+            </Link>
+            <Button type="submit" disabled={isSubmitting}>
+              Save Changes
+            </Button>
+          </>
+        )}
       </div>
     </form>
   )
