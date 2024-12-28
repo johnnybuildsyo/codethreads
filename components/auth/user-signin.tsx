@@ -14,7 +14,7 @@ export function UserSignIn() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle>Sign in to Code Threads</CardTitle>
+        <CardTitle>Sign in to CodeThreads</CardTitle>
         <CardDescription>Continue with GitHub to sign in to your account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

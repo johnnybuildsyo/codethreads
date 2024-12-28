@@ -49,7 +49,7 @@ Thread title:
 Building the Publishing Platform for Live Coding
 
 Intro:
-I came up with the idea for Code Threads when I was [live posting to Bluesky](https://bsky.app/profile/johnnybuilds.bsky.social/post/3lct4orsaqc25) some code for a project. Sharing my coding process in real-time was a lot of fun. It got me thinking...
+I came up with the idea for CodeThreads when I was [live posting to Bluesky](https://bsky.app/profile/johnnybuilds.bsky.social/post/3lct4orsaqc25) some code for a project. Sharing my coding process in real-time was a lot of fun. It got me thinking...
 
 What if there was a platform that allowed me to share what I was working on while I was working on it, but didn't get in the way? A place where I could showcase my work and get immediate feedback. 
 
@@ -57,10 +57,10 @@ Notes:
 
 V0 makes it really easy to spin up UI so I gave it a prompt:
 
-> Landing page for Code Threads, a site for live coding in post thread format. Share and learn with the community as you build in public.
+> Landing page for CodeThreads, a site for live coding in post thread format. Share and learn with the community as you build in public.
 
 It spit out a landing page with Header, Hero, Features, HowItWorks, CommunityShowcase, CallToAction and Footer composed of Shadcn UI components.
 
 Summary:
 
-I'm thinking about Code Threads as a code-first writing and publishing platform, a place to build projects starting from zero to launch and beyond. 
+I'm thinking about CodeThreads as a code-first writing and publishing platform, a place to build projects starting from zero to launch and beyond. 

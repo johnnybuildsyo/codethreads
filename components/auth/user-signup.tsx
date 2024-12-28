@@ -9,7 +9,7 @@ export function UserSignup() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle>Welcome to Code Threads!</CardTitle>
+        <CardTitle>Welcome to CodeThreads!</CardTitle>
         <CardDescription>Document and share your coding journey</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

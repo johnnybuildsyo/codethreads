@@ -94,7 +94,7 @@ export default function WelcomePage() {
         <div className="flex justify-center mb-8">
           <LogoIcon className="scale-150" />
         </div>
-        <h1 className="text-3xl font-bold mb-16 text-center">Welcome to Code Threads!</h1>
+        <h1 className="text-3xl font-bold mb-16 text-center">Welcome to CodeThreads!</h1>
         <div className="space-y-6">
           <div className="text-center h-[124px] flex flex-col gap-2 justify-center items-center">
             <AvatarUpload currentUrl={avatarUrl || user?.user_metadata?.avatar_url} onUpload={(url) => setAvatarUrl(url)} />

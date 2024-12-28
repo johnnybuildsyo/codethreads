@@ -3,7 +3,7 @@ export const usersData = {
     username: "sarahdev",
     name: "Sarah Developer",
     avatar: "/placeholder.svg?height=100&width=100",
-    bio: "Full-stack developer passionate about React and Node.js. Building in public and sharing my journey on Code Threads.",
+    bio: "Full-stack developer passionate about React and Node.js. Building in public and sharing my journey on CodeThreads.",
     github: "sarahdev",
     twitter: "sarahdev",
     projects: [
