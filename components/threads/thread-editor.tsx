@@ -147,7 +147,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           project_id: projectId,
           title,
           sections: cleanedSections,
-          commit_sha: commit.sha,
+          commit_shas: [commit.sha],
         })
         .select()
         .single()

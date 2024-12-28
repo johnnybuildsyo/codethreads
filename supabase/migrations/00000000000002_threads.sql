@@ -3,7 +3,7 @@ create table public.threads (
   project_id uuid references projects(id) not null,
   title text not null,
   sections jsonb not null,
-  commit_sha text not null,
+  commit_shas text[] not null default array[]::text[],
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

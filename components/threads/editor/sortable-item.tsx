@@ -1,8 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
 import { ThreadSection } from "./types"
-import type { CSSProperties } from "react"
-import { useEffect, useRef, useState } from "react"
 
 interface SortableItemProps {
   section: ThreadSection
@@ -10,44 +9,30 @@ interface SortableItemProps {
 }
 
 export function SortableItem({ section, children }: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id })
-  const [height, setHeight] = useState<number>()
-  const ref = useRef<HTMLDivElement>(null)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+  })
 
-  // Capture height before dragging starts
-  useEffect(() => {
-    if (ref.current && !height) {
-      setHeight(ref.current.offsetHeight)
-    }
-  }, [height])
-
-  const style: CSSProperties = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0) scaleX(1)` : undefined,
+  const style = {
+    transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 50 : undefined,
-    position: isDragging ? ("relative" as const) : undefined,
-    height: isDragging ? height : undefined,
+    opacity: isDragging ? 0.5 : undefined,
   }
 
   return (
-    <div ref={mergeRefs([ref, setNodeRef])} style={style} className="relative group">
-      {children}
-      <div {...attributes} {...listeners} className="absolute -left-8 top-2 opacity-50 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
+    <div ref={setNodeRef} style={style} className="relative group">
+      <div
+        {...attributes}
+        {...listeners}
+        tabIndex={0}
+        aria-disabled={false}
+        aria-roledescription="sortable"
+        aria-describedby="DndDescribedBy-0"
+        className="absolute -left-8 top-2 opacity-50 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4" />
       </div>
+      {children}
     </div>
   )
-}
-
-// Helper to merge refs
-const mergeRefs = (refs: Array<React.Ref<HTMLDivElement | null>>): React.RefCallback<HTMLDivElement | null> => {
-  return (value) => {
-    refs.forEach((ref) => {
-      if (typeof ref === "function") {
-        ref(value)
-      } else if (ref && typeof ref === "object") {
-        ;(ref as React.MutableRefObject<HTMLDivElement | null>).current = value
-      }
-    })
-  }
 }
