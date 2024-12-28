@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
-
+import { cn } from "@/lib/utils"
 interface Commit {
   sha: string
   commit: {
@@ -25,6 +25,7 @@ interface CommitManagerProps {
 }
 
 const COMMITS_PER_PAGE = 5
+const COMMITS_PER_PAGE_LOAD = 30
 
 export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
@@ -32,31 +33,92 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   const [page, setPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const [loadedPages, setLoadedPages] = useState<number[]>([])
 
+  const fetchCommitsForPage = async (pageNum: number, perPage: number = COMMITS_PER_PAGE_LOAD) => {
+    try {
+      const response = await fetch(`/api/github/commits/${fullName}?page=${pageNum}&per_page=${perPage}`)
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error(`Failed to fetch commits for page ${pageNum}:`, error)
+      throw error
+    }
+  }
+
+  // Initial load of oldest commits
   useEffect(() => {
-    async function fetchCommits() {
+    async function fetchInitialCommits() {
       setLoading(true)
       try {
-        // Calculate the initial page number to get oldest commits
-        // GitHub uses 30 commits per page by default
-        const perPage = 30
+        const perPage = COMMITS_PER_PAGE_LOAD
         const initialPage = Math.ceil(totalCommits / perPage)
 
-        const response = await fetch(`/api/github/commits/${fullName}?page=${initialPage}&per_page=${perPage}`)
-        const data = await response.json()
-
-        // Reverse the array since we want oldest first
+        const data = await fetchCommitsForPage(initialPage)
         setCommits(data.reverse())
+        setLoadedPages([initialPage])
       } catch (error) {
-        console.error("Failed to fetch commits:", error)
+        console.error("Failed to fetch initial commits:", error)
         setError("Failed to fetch commits")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCommits()
+    fetchInitialCommits()
   }, [fullName, totalCommits])
+
+  // Load additional commits when needed
+  useEffect(() => {
+    async function loadMissingCommits() {
+      const perPage = COMMITS_PER_PAGE_LOAD
+      const totalPages = Math.ceil(totalCommits / perPage)
+      const startIndex = page * COMMITS_PER_PAGE
+
+      // Calculate which GitHub page we need based on the commit index from the end
+      const commitsFromEnd = totalCommits - startIndex - COMMITS_PER_PAGE
+      const githubPage = Math.floor(commitsFromEnd / perPage) + 1
+
+      console.log(
+        JSON.stringify(
+          {
+            startIndex,
+            commitsFromEnd,
+            githubPage,
+            totalCommits,
+            perPage,
+            loadedPages,
+            totalPages,
+            calculation: {
+              startIndexDivPerPage: startIndex / perPage,
+              flooredStartIndex: Math.floor(startIndex / perPage),
+            },
+          },
+          null,
+          2
+        )
+      )
+
+      if (!loadedPages.includes(githubPage) && !loading && githubPage > 0) {
+        setLoading(true)
+        try {
+          const newCommits = await fetchCommitsForPage(githubPage)
+          setCommits((current) => {
+            const allCommits = [...current, ...newCommits]
+            const uniqueCommits = Array.from(new Map(allCommits.map((c) => [c.sha, c])).values())
+            return uniqueCommits.sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
+          })
+          setLoadedPages((current) => [...current, githubPage])
+        } catch (error) {
+          console.error("Failed to load additional commits:", error)
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadMissingCommits()
+  }, [page, loadedPages, loading, totalCommits, fullName])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
@@ -64,12 +126,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
     }
   }
 
-  if (loading || totalCommits === 0) {
-    return <LoadingAnimation />
-  }
-
   if (error) return <div className="text-sm text-red-500">Error: {error}</div>
-  if (commits.length === 0) return <div className="text-sm text-muted-foreground">No commits found</div>
 
   const pageStart = page * COMMITS_PER_PAGE
   const pageEnd = pageStart + COMMITS_PER_PAGE
@@ -80,14 +137,16 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
     <div className="space-y-6 border-t pt-4">
       <div className="flex items-center justify-between">
         <h2 className="font-medium">Commits</h2>
-        <div className="flex items-center space-x-2 text-sm">
+
+        <div className={cn("flex items-center space-x-2 text-sm", commits.length === 0 && "opacity-0")}>
           <Button variant="ghost" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span>
             Page {page + 1} of {totalPages}
+            {loading && "..."}
           </span>
-          <Button variant="ghost" size="sm" disabled={pageEnd >= commits.length} onClick={() => setPage((p) => p + 1)}>
+          <Button variant="ghost" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -106,6 +165,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
             </div>
           </div>
         ))}
+        {(loading || totalCommits === 0 || commits.length === 0) && <LoadingAnimation />}
       </div>
     </div>
   )
