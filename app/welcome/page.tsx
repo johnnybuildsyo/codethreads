@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LogoIcon from "@/components/graphics/logo-icon"
 import { Session, User } from "@supabase/supabase-js"
+import { AvatarUpload } from "@/components/auth/avatar-upload"
 
 export default function WelcomePage() {
   const [username, setUsername] = useState("")
@@ -14,6 +15,7 @@ export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string>("")
 
   useEffect(() => {
     const supabase = createClient()
@@ -21,9 +23,12 @@ export default function WelcomePage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user || null)
-      // Set initial username from GitHub preferred_username
-      if (session?.user?.user_metadata?.preferred_username) {
-        setUsername(session.user.user_metadata.preferred_username.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+      // Set initial avatar and username from GitHub
+      if (session?.user) {
+        setAvatarUrl(session.user.user_metadata.avatar_url)
+        if (session.user.user_metadata.preferred_username) {
+          setUsername(session.user.user_metadata.preferred_username.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+        }
       }
     })
 
@@ -69,7 +74,7 @@ export default function WelcomePage() {
       id: user.id,
       username,
       name: user.user_metadata.name,
-      avatar_url: user.user_metadata.avatar_url,
+      avatar_url: avatarUrl || user.user_metadata.avatar_url,
       github_username: user.user_metadata.user_name,
     })
 
@@ -91,8 +96,8 @@ export default function WelcomePage() {
         </div>
         <h1 className="text-3xl font-bold mb-16 text-center">Welcome to Code Threads!</h1>
         <div className="space-y-6">
-          <div className="text-center h-[124px]">
-            {user?.user_metadata?.avatar_url && <img src={user.user_metadata.avatar_url} alt="Profile" className="w-20 h-20 rounded-full mx-auto mb-4" />}
+          <div className="text-center h-[124px] flex flex-col gap-2 justify-center items-center">
+            <AvatarUpload currentUrl={avatarUrl || user?.user_metadata?.avatar_url} onUpload={(url) => setAvatarUrl(url)} />
             <p className="text-xl font-medium">{user?.user_metadata?.name || user?.user_metadata?.user_name}</p>
           </div>
 
@@ -121,31 +126,6 @@ export default function WelcomePage() {
               {isLoading ? "Creating Profile..." : "Continue »"}
             </Button>
           </form>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg font-mono text-xs space-y-2">
-              <p>Auth Status:</p>
-              <pre className="whitespace-pre-wrap break-all">
-                {JSON.stringify(
-                  {
-                    isAuthenticated: !!session,
-                    user: {
-                      id: user?.id,
-                      email: user?.email,
-                      created_at: user?.created_at,
-                      user_metadata: user?.user_metadata,
-                    },
-                    session: {
-                      expires_at: session?.expires_at,
-                      provider_token: session?.provider_token ? "[exists]" : null,
-                    },
-                  },
-                  null,
-                  2
-                )}
-              </pre>
-            </div>
-          </div>
         </div>
       </main>
     </div>

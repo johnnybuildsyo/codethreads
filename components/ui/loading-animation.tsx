@@ -2,10 +2,10 @@
 
 import { cn } from "@/lib/utils"
 
-export function LoadingAnimation({ className }: { className?: string }) {
+export function LoadingAnimation({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <div className={cn("text-muted-foreground font-mono", className)}>
-      <span className="pr-0.5 animate-pulse">Loading</span>
+      <span className="pr-0.5 animate-pulse">{children ? children : "Loading"}</span>
       <span className="inline-flex items-center font-sans gap-px">
         <span className="animate-fade-in-out text-xl">.</span>
         <span className="animate-fade-in-out text-xl [animation-delay:0.2s]">.</span>

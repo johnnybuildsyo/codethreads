@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { GitFork, Star, ArrowRight } from "lucide-react"
 import type { GithubRepo } from "@/types/github"
+import { LoadingAnimation } from "../ui/loading-animation"
 
 interface ProjectImportProps {
   username: string
@@ -67,10 +68,10 @@ export function ProjectImport({ repos, onProjectSelect, isCreating }: ProjectImp
             )}
             <Button size="lg" disabled={!selectedRepo || isCreating} onClick={() => selectedRepo && onProjectSelect(selectedRepo)}>
               {isCreating ? (
-                <span className="animate-pulse">Creating Thread...</span>
+                <LoadingAnimation>Importing Project</LoadingAnimation>
               ) : (
                 <>
-                  Start Code Thread
+                  Import Project
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

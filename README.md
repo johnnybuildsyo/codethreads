@@ -61,5 +61,6 @@ V0 makes it really easy to spin up UI so I gave it a prompt:
 
 It spit out a landing page with Header, Hero, Features, HowItWorks, CommunityShowcase, CallToAction and Footer composed of Shadcn UI components.
 
+Summary:
 
 I'm thinking about Code Threads as a code-first writing and publishing platform, a place to build projects starting from zero to launch and beyond. 
