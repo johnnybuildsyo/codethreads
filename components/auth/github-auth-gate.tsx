@@ -6,16 +6,12 @@ import { Github } from "lucide-react"
 import { signInWithGitHub } from "@/components/auth/actions"
 import { LoadingAnimation } from "../ui/loading-animation"
 
-interface GitHubAuthGateProps {
-  message?: string
-}
-
-export function GitHubAuthGate({ message = "Please sign in with GitHub to continue" }: GitHubAuthGateProps) {
+export function GitHubAuthGate({ children }: { children?: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[320px] gap-4 bg-foreground/5 p-4 rounded-lg">
-      <p className="text-muted-foreground">{message}</p>
+      <div className="text-muted-foreground">{children || "Please sign in with GitHub to continue"}</div>
       {isLoading && <LoadingAnimation />}
       <Button
         onClick={async () => {

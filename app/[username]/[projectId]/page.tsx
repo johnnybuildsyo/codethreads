@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
+import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -27,7 +28,7 @@ async function getGitHubStats(fullRepoName: string, token: string) {
   const data = await response.json()
 
   // Get commit count using the repository's default branch
-  const commitsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&sha=${data.default_branch}`, {
+  const commitsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github.v3+json",
@@ -167,9 +168,15 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
-          <div className="mt-4">
-            <CommitManager fullName={project.full_name} isOwner={isOwner} />
-          </div>
+          {isOwner && (
+            <div className="mt-4">
+              {session.provider_token ? (
+                <CommitManager projectId={project.id} fullName={project.full_name} totalCommits={stats?.commits || 0} />
+              ) : (
+                <GitHubAuthGate>Please sign in with GitHub to load commits</GitHubAuthGate>
+              )}
+            </div>
+          )}
         </div>
         {/* Thread list will be added later */}
       </main>

@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { GitHubAuthGate } from "../auth/github-auth-gate"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
-import { Session } from "@supabase/supabase-js"
 
 interface Commit {
   sha: string
@@ -22,73 +19,44 @@ interface Commit {
 }
 
 interface CommitManagerProps {
+  projectId: string
   fullName: string
-  isOwner: boolean
+  totalCommits: number
 }
 
 const COMMITS_PER_PAGE = 5
 
-export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
-  const supabase = createClient()
+export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
-  const [session, setSession] = useState<Session | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    async function initializeAndFetch() {
+    async function fetchCommits() {
+      setLoading(true)
       try {
-        console.log("1. Checking Supabase client:", !!supabase)
+        // Calculate the initial page number to get oldest commits
+        // GitHub uses 30 commits per page by default
+        const perPage = 30
+        const initialPage = Math.ceil(totalCommits / perPage)
 
-        // Check auth state with error handling
-        const { data: authData, error: authError } = await supabase.auth.getSession()
-        console.log("2. Auth check error response:", authError)
-        console.log("3. Auth check raw response:", authData)
-        setSession(authData.session)
-        if (!authData.session?.provider_token) {
-          console.log("4. No provider token - stopping here")
-          setLoading(false)
-          return
-        }
-        // Attempt commits fetch
-        console.log("5. Fetching commits for:", fullName)
-        const response = await fetch(`/api/github/commits/${fullName}?page=1&per_page=100`, {
-          headers: {
-            Authorization: `Bearer ${authData.session.provider_token}`,
-          },
-        })
-        console.log("6. Commits response:", {
-          ok: response.ok,
-          status: response.status,
-          statusText: response.statusText,
-        })
-
-        if (!response.ok) throw new Error(`Failed to fetch commits: ${response.statusText}`)
-
+        const response = await fetch(`/api/github/commits/${fullName}?page=${initialPage}&per_page=${perPage}`)
         const data = await response.json()
-        console.log("7. Received commits data:", {
-          isArray: Array.isArray(data),
-          length: Array.isArray(data) ? data.length : 0,
-        })
 
-        if (Array.isArray(data)) {
-          const sortedCommits = [...data].sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
-          setCommits(sortedCommits)
-        } else {
-          throw new Error("Received invalid data format from server")
-        }
+        // Reverse the array since we want oldest first
+        setCommits(data.reverse())
       } catch (error) {
-        console.error("Top level error:", error)
-        setError(error instanceof Error ? error.message : "Failed to initialize")
+        console.error("Failed to fetch commits:", error)
+        setError("Failed to fetch commits")
       } finally {
         setLoading(false)
       }
     }
 
-    initializeAndFetch()
-  }, [fullName])
+    fetchCommits()
+  }, [fullName, totalCommits])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
@@ -96,17 +64,9 @@ export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
     }
   }
 
-  if (!session) return null
-
-  if (loading) {
+  if (loading || totalCommits === 0) {
     return <LoadingAnimation />
   }
-
-  if (!session.provider_token && isOwner) {
-    return <GitHubAuthGate />
-  }
-
-  if (!session.provider_token) return null
 
   if (error) return <div className="text-sm text-red-500">Error: {error}</div>
   if (commits.length === 0) return <div className="text-sm text-muted-foreground">No commits found</div>
@@ -114,7 +74,7 @@ export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
   const pageStart = page * COMMITS_PER_PAGE
   const pageEnd = pageStart + COMMITS_PER_PAGE
   const currentPageCommits = commits.slice(pageStart, pageEnd)
-  const totalPages = Math.ceil(commits.length / COMMITS_PER_PAGE)
+  const totalPages = Math.ceil(totalCommits / COMMITS_PER_PAGE)
 
   return (
     <div className="space-y-6 border-t pt-4">
@@ -147,7 +107,6 @@ export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
           </div>
         ))}
       </div>
-      <p className="text-sm text-muted-foreground">{commits.length} unprocessed commits</p>
     </div>
   )
 }

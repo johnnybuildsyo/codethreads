@@ -23,7 +23,7 @@ export async function GET(
   const sort = searchParams.get("sort") || "created";
   const direction = searchParams.get("direction") || "asc";
 
-  const apiUrl = `https://api.github.com/repos/${owner}/${repository}/commits?page=${page}&per_page=${per_page}&sort=${sort}&direction=${direction}`;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repository}/commits?page=${page}&per_page=${per_page}`;
   console.log(apiUrl);
 
   const response = await fetch(apiUrl, {
