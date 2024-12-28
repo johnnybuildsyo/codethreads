@@ -196,7 +196,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
   const handleImageUpload = async (file: File, sectionId: string) => {
     try {
-      console.log("Starting image upload for section:", sectionId)
       const formData = new FormData()
       formData.append("file", file)
 
@@ -208,17 +207,12 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       if (!response.ok) throw new Error("Upload failed")
 
       const { image_url } = await response.json()
-      console.log("Received image URL:", image_url)
 
       setSections((current) => {
         const updatedSections = current.map((section) => {
-          console.log("sectionId", sectionId)
-          console.log("Current section:", section)
           if (section.id === sectionId && section.type === "markdown") {
-            console.log("Updating section content:", section.id)
             const imageMarkdown = `\n\n![](${image_url})`
             const updatedContent = section.content + imageMarkdown
-            console.log("New section content:", updatedContent)
             return {
               ...section,
               content: updatedContent,
@@ -226,7 +220,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           }
           return section
         })
-        console.log("Updated sections:", updatedSections)
         return updatedSections
       })
     } catch (error) {
@@ -234,8 +227,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       toast.error("Failed to upload image. Please try again.")
     }
   }
-
-  console.log({ sections })
 
   return (
     <ThreadProvider>
@@ -303,7 +294,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                           <div className="flex gap-2">
                             <ImageUpload
                               onUpload={(file) => {
-                                console.log("ImageUpload triggered for file:", file.name)
                                 handleImageUpload(file, section.id)
                               }}
                             />
