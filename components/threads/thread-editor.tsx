@@ -253,7 +253,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
           <CommitInfo commit={commit} files={files} fullName={fullName} />
 
-          <div className="flex gap-4 items-center mb-4">
+          <div className="flex gap-4 items-center py-4">
             <Input
               className="!text-2xl font-bold border-t-0 shadow-none border-l-0 border-r-0 rounded-none border-b-foreground/20 pl-1 !focus:outline-none !focus-visible:ring-0 focus:border-b-foreground !ring-0"
               placeholder="Thread title"
