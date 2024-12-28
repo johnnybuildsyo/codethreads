@@ -20,7 +20,7 @@ export function UserSignIn() {
       <CardContent className="space-y-6">
         {error && <p className="text-red-500">{error}</p>}
         {isLoading ? (
-          <LoadingAnimation>Connecting to GitHub</LoadingAnimation>
+          <LoadingAnimation className="w-full text-center text-sm">Connecting to GitHub</LoadingAnimation>
         ) : (
           <Button
             size="lg"

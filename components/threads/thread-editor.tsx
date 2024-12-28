@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Bolt, Zap, Save } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -27,6 +27,7 @@ import { CommitDiff } from "./editor/commit-diff"
 import { FileChange, ThreadSection } from "./editor/types"
 import { ThreadIdeas } from "./editor/thread-ideas"
 import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
+import { LoadingAnimation } from "../ui/loading-animation"
 
 interface ThreadEditorProps {
   projectId: string
@@ -118,12 +119,11 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
     router.push(getProjectPath())
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (publish: boolean = false) => {
     setIsSubmitting(true)
     const supabase = createClient()
 
     try {
-      // Filter out any non-markdown sections that shouldn't be persisted
       const cleanedSections = sections.map((section) => {
         if (section.type === "markdown") {
           return {
@@ -133,7 +133,6 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             role: section.role,
           }
         }
-        // For other types like "diff" or "code", just store minimal info
         return {
           id: section.id,
           type: section.type,
@@ -148,16 +147,18 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           title,
           sections: cleanedSections,
           commit_shas: [commit.sha],
+          published_at: publish ? new Date().toISOString() : null,
         })
         .select()
         .single()
 
       if (error) throw error
 
+      toast.success(publish ? "Thread published!" : "Draft saved!")
       router.push(getProjectPath())
     } catch (error) {
-      console.error("Failed to create thread:", error)
-      toast.error("Failed to create thread. Please try again.")
+      console.error("Failed to save thread:", error)
+      toast.error("Failed to save thread. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -390,14 +391,23 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             </div>
           )}
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="ghost" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={!title || isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Thread"}
-            </Button>
-          </div>
+          {isSubmitting ? (
+            <LoadingAnimation className="w-full text-right text-sm">Saving CodeThread</LoadingAnimation>
+          ) : (
+            <div className="flex justify-end space-x-2">
+              <Button variant="ghost" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button variant="outline" onClick={() => handleSubmit(false)} disabled={!title || isSubmitting}>
+                <Save className="h-4 w-4 opacity-50" />
+                Save as Draft
+              </Button>
+              <Button onClick={() => handleSubmit(true)} disabled={!title || isSubmitting}>
+                <Zap className="h-4 w-4 opacity-70" />
+                Publish CodeThread
+              </Button>
+            </div>
+          )}
         </div>
         <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
           <ThreadPreview title={title} sections={sections} theme={theme} fullName={fullName} commit={commit} />

@@ -4,6 +4,7 @@ create table public.threads (
   title text not null,
   sections jsonb not null,
   commit_shas text[] not null default array[]::text[],
+  published_at timestamp with time zone,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

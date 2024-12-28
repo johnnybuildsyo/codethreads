@@ -61,7 +61,7 @@ export function ProjectImport({ repos, onProjectSelect, isCreating }: ProjectImp
             )}
           </div>
           {isCreating ? (
-            <LoadingAnimation className="w-full text-right p-2">Importing Project</LoadingAnimation>
+            <LoadingAnimation className="w-full text-right text-sm p-2">Importing Project</LoadingAnimation>
           ) : (
             <div className="flex justify-end space-x-4">
               {selectedRepo && (
