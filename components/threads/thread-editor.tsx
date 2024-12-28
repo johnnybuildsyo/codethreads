@@ -28,6 +28,7 @@ import { FileChange, ThreadSection } from "./editor/types"
 import { ThreadIdeas } from "./editor/thread-ideas"
 import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
 import { LoadingAnimation } from "../ui/loading-animation"
+import ReactMarkdown from "react-markdown"
 
 interface ThreadEditorProps {
   projectId: string
@@ -382,15 +383,10 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
                           )}
                         </div>
                       )}
-                      {section.type === "file-link" && section.file && (
-                        <a
-                          href={`https://github.com/${fullName}/blob/${commit.sha}/${section.file.filename}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-500 hover:underline"
-                        >
-                          View {section.file.filename} on GitHub
-                        </a>
+                      {section.type === "commit-links" && section.content && (
+                        <div className="prose dark:prose-invert">
+                          <ReactMarkdown>{section.content}</ReactMarkdown>
+                        </div>
                       )}
                     </SortableItem>
                   ))}
@@ -443,13 +439,35 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           setSections((current) => {
             const index = current.findIndex((s) => s.id === activeSectionId)
             const newSections = [...current]
-            selections.forEach((selection, i) => {
-              newSections.splice(index + 1 + i, 0, {
+
+            // Group file-link selections into a single commit-links section
+            const fileLinks = selections
+              .filter((s) => s.type === "commit-links")
+              .map((s) => ({
+                sha: commit.sha,
+                filename: s.file.filename,
+              }))
+
+            if (fileLinks.length > 0) {
+              newSections.splice(index + 1, 0, {
                 id: crypto.randomUUID(),
-                type: selection.type === "link" ? "file-link" : selection.type,
-                file: selection.file,
+                type: "commit-links",
+                content: fileLinks.map((link) => `[${link.filename}](https://github.com/${fullName}/blob/${link.sha}/${link.filename})`).join("\n\n"),
+                commits: fileLinks,
               })
-            })
+            }
+
+            // Add remaining diff/code sections
+            selections
+              .filter((s) => s.type !== "commit-links")
+              .forEach((selection, i) => {
+                newSections.splice(index + 1 + i, 0, {
+                  id: crypto.randomUUID(),
+                  type: selection.type,
+                  file: selection.file,
+                })
+              })
+
             return newSections
           })
           setDiffDialogOpen(false)

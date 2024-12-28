@@ -59,15 +59,10 @@ export function ThreadPreview({ title, sections, theme, fullName, commit }: Thre
                   <img src={section.imageUrl} alt="" className="rounded-lg" />
                 </div>
               )}
-              {section.type === "file-link" && section.file && (
-                <a
-                  href={`https://github.com/${fullName}/blob/${commit.sha}/${section.file.filename}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline block mb-4"
-                >
-                  View {section.file.filename} on GitHub
-                </a>
+              {section.type === "commit-links" && section.content && (
+                <div className="prose dark:prose-invert">
+                  <ReactMarkdown>{section.content}</ReactMarkdown>
+                </div>
               )}
               {section.type === "code" && section.file && (
                 <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">

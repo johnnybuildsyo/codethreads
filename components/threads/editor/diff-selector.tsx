@@ -7,16 +7,21 @@ import { CheckSquare, Square } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
+interface DiffSelection {
+  type: "code" | "diff" | "commit-links"
+  file: FileChange
+}
+
 interface DiffSelectorProps {
   open: boolean
   onClose: () => void
   files: FileChange[]
-  onSelect: (files: { file: FileChange; type: "diff" | "code" | "link" }[]) => void
+  onSelect: (selections: DiffSelection[]) => void
 }
 
 export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  const [codeType, setCodeType] = useState<"diff" | "code" | "link">("diff")
+  const [codeType, setCodeType] = useState<"diff" | "code" | "commit-links">("diff")
   const filteredFiles = files.filter((f) => !shouldExcludeFile(f.filename))
 
   const handleToggle = (filename: string) => {
@@ -42,7 +47,7 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
     setSelectedFiles(new Set())
   }
 
-  const getButtonText = (count: number, type: "diff" | "code" | "link") => {
+  const getButtonText = (count: number, type: "diff" | "code" | "commit-links") => {
     if (count === 0) return "Add"
 
     const suffix = count === 1 ? "" : "s"
@@ -51,7 +56,7 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
         return `Add ${count} Diff${suffix}`
       case "code":
         return `Add ${count} Code Block${suffix}`
-      case "link":
+      case "commit-links":
         return `Add ${count} Link${suffix}`
     }
   }
@@ -63,7 +68,7 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
           <DialogTitle>Add Code Changes</DialogTitle>
         </DialogHeader>
 
-        <RadioGroup value={codeType} onValueChange={(value) => setCodeType(value as "diff" | "code" | "link")} className="mb-4">
+        <RadioGroup value={codeType} onValueChange={(value) => setCodeType(value as "diff" | "code" | "commit-links")} className="mb-4">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="diff" id="diff" />
             <Label htmlFor="diff">Show diff</Label>
@@ -73,8 +78,8 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
             <Label htmlFor="code">Show code</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="link" id="link" />
-            <Label htmlFor="link">Link to file</Label>
+            <RadioGroupItem value="commit-links" id="commit-links" />
+            <Label htmlFor="commit-links">Link to file</Label>
           </div>
         </RadioGroup>
 

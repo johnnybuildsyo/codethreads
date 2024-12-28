@@ -7,13 +7,16 @@ export interface FileChange {
   newValue: string
 }
 
-export interface ThreadSection {
+export type ThreadSection = {
   id: string
-  type: "intro" | "diff" | "markdown" | "image" | "code" | "file-link"
+  type: "markdown" | "diff" | "code" | "image" | "commit-links"
   content?: string
-  file?: FileChange
   role?: "intro" | "details" | "summary"
+  file?: FileChange
   imageUrl?: string
-  codeType?: "diff" | "code" | "link"
   isCollapsed?: boolean
+  commits?: Array<{
+    sha: string
+    filename: string
+  }>
 } 
