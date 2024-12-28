@@ -7,6 +7,7 @@ import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
+import { ThreadList } from "@/components/threads/thread-list"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -78,6 +79,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const stats = session?.provider_token && project.full_name ? await getGitHubStats(project.full_name, session.provider_token) : null
 
   const isOwner = session?.user?.id === project.owner_id
+
+  // Get threads for this project
+  const { data: threads } = await supabase.from("threads").select("*").eq("project_id", project.id).order("created_at", { ascending: false })
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,17 +172,21 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
-          {isOwner && (
-            <div className="mt-4">
-              {session.provider_token ? (
-                <CommitManager projectId={project.id} fullName={project.full_name} totalCommits={stats?.commits || 0} />
-              ) : (
-                <GitHubAuthGate>Please sign in with GitHub to load commits</GitHubAuthGate>
-              )}
-            </div>
-          )}
+          <div className="mt-8 border-t py-8">
+            <ThreadList threads={threads || []} username={username} projectId={projectId} />
+          </div>
+          <div className="grid gap-8 md:grid-cols-3 mt-8">
+            {isOwner && (
+              <div className="md:col-span-3">
+                {session.provider_token ? (
+                  <CommitManager projectId={project.id} fullName={project.full_name} totalCommits={stats?.commits || 0} />
+                ) : (
+                  <GitHubAuthGate>Please sign in with GitHub to load commits</GitHubAuthGate>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-        {/* Thread list will be added later */}
       </main>
     </div>
   )
