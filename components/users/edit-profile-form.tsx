@@ -11,6 +11,12 @@ import { toast } from "sonner"
 import { AvatarUpload } from "@/components/auth/avatar-upload"
 import Link from "next/link"
 import { LoadingAnimation } from "../ui/loading-animation"
+import { Plus, X, GripVertical } from "lucide-react"
+
+interface Link {
+  title: string
+  url: string
+}
 
 interface EditProfileFormProps {
   profile: {
@@ -20,6 +26,7 @@ interface EditProfileFormProps {
     avatar_url: string | null
     github_username: string | null
     twitter_username: string | null
+    links: Link[] | null
   }
 }
 
@@ -28,8 +35,28 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
   const [bio, setBio] = useState(profile.bio || "")
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "")
   const [twitter, setTwitter] = useState(profile.twitter_username || "")
+  const [links, setLinks] = useState<Link[]>(profile.links || [])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+
+  const addLink = () => {
+    setLinks([...links, { title: "", url: "" }])
+  }
+
+  const removeLink = (index: number) => {
+    setLinks(links.filter((_, i) => i !== index))
+  }
+
+  const updateLink = (index: number, field: keyof Link, value: string) => {
+    setLinks(
+      links.map((link, i) => {
+        if (i === index) {
+          return { ...link, [field]: value }
+        }
+        return link
+      })
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,6 +71,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
           bio,
           avatar_url: avatarUrl,
           twitter_username: twitter || null,
+          links: links.filter((link) => link.title && link.url), // Only save non-empty links
         })
         .eq("username", profile.username)
 
@@ -80,6 +108,29 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
         <div className="flex items-center">
           <span className="mr-2">@</span>
           <Input id="twitter" value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="username" />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label>Links</Label>
+          <Button type="button" variant="outline" size="sm" onClick={addLink}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Link
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {links.map((link, index) => (
+            <div key={index} className="flex items-center gap-2 group">
+              <GripVertical className="h-4 w-4 text-muted-foreground/30" />
+              <Input placeholder="Title" value={link.title} onChange={(e) => updateLink(index, "title", e.target.value)} className="flex-1" />
+              <Input placeholder="URL" value={link.url} onChange={(e) => updateLink(index, "url", e.target.value)} className="flex-1" />
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeLink(index)} className="opacity-0 group-hover:opacity-100">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 

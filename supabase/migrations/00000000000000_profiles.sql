@@ -6,6 +6,7 @@ create table public.profiles (
   bio text,
   github_username text,
   twitter_username text,
+  links jsonb default '[]'::jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -24,4 +25,6 @@ create policy "Users can insert their own profile"
 
 create policy "Users can update their own profile"
   on profiles for update
-  using ( auth.uid() = id ); 
+  using ( auth.uid() = id );
+
+comment on column public.profiles.links is 'Array of user links [{title: string, url: string}]'; 

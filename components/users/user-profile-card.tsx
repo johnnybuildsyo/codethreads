@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github, Twitter, Pencil } from "lucide-react"
+import { Github, Twitter, Pencil, Link as LinkIcon } from "lucide-react"
 import Link from "next/link"
 
 interface UserProfileCardProps {
@@ -12,9 +12,10 @@ interface UserProfileCardProps {
   github: string | null
   twitter: string | null
   isCurrentUser?: boolean
+  links?: { title: string; url: string }[]
 }
 
-export function UserProfileCard({ name, username, avatar, bio, github, twitter, isCurrentUser }: UserProfileCardProps) {
+export function UserProfileCard({ name, username, avatar, bio, github, twitter, isCurrentUser, links = [] }: UserProfileCardProps) {
   return (
     <Card className="md:col-span-1">
       <CardHeader className="relative">
@@ -41,20 +42,40 @@ export function UserProfileCard({ name, username, avatar, bio, github, twitter, 
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-muted-foreground mb-4 text-sm">{bio}</p>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`https://github.com/${github}`}>
-              <Github className="mr-2 h-4 w-4" />
-              GitHub
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`https://twitter.com/${twitter}`}>
-              <Twitter className="mr-2 h-4 w-4" />
-              Twitter
-            </Link>
-          </Button>
+        {bio && <p className="text-muted-foreground mb-4 text-sm">{bio}</p>}
+
+        <div className="space-y-2">
+          <div className="flex space-x-2">
+            {github && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`https://github.com/${github}`}>
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub
+                </Link>
+              </Button>
+            )}
+            {twitter && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`https://twitter.com/${twitter}`}>
+                  <Twitter className="mr-2 h-4 w-4" />
+                  Twitter
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {links.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {links.map((link, i) => (
+                <Button key={i} variant="outline" size="sm" asChild>
+                  <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    {link.title}
+                  </a>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

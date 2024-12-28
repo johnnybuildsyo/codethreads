@@ -131,6 +131,7 @@ export type Database = {
           twitter_username: string | null
           updated_at: string
           username: string
+          links: { title: string; url: string }[] | null
         }
         Insert: {
           avatar_url?: string | null
@@ -142,6 +143,7 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string
           username: string
+          links?: { title: string; url: string }[] | null
         }
         Update: {
           avatar_url?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string
           username?: string
+          links?: { title: string; url: string }[] | null
         }
         Relationships: []
       }
