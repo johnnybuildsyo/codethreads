@@ -29,6 +29,7 @@ interface CommitManagerProps {
 const COMMITS_PER_PAGE = 5
 
 export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
+  const supabase = createClient()
   const [commits, setCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -37,59 +38,61 @@ export function CommitManager({ fullName, isOwner }: CommitManagerProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-  }, [])
+    async function initializeAndFetch() {
+      try {
+        console.log("1. Checking Supabase client:", !!supabase)
 
-  useEffect(() => {
-    fetchCommits()
+        // Check auth state with error handling
+        const { data: authData, error: authError } = await supabase.auth.getSession()
+        console.log("2. Auth check error response:", authError)
+        console.log("3. Auth check raw response:", authData)
+        setSession(authData.session)
+        if (!authData.session?.provider_token) {
+          console.log("4. No provider token - stopping here")
+          setLoading(false)
+          return
+        }
+        // Attempt commits fetch
+        console.log("5. Fetching commits for:", fullName)
+        const response = await fetch(`/api/github/commits/${fullName}?page=1&per_page=100`, {
+          headers: {
+            Authorization: `Bearer ${authData.session.provider_token}`,
+          },
+        })
+        console.log("6. Commits response:", {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+        })
+
+        if (!response.ok) throw new Error(`Failed to fetch commits: ${response.statusText}`)
+
+        const data = await response.json()
+        console.log("7. Received commits data:", {
+          isArray: Array.isArray(data),
+          length: Array.isArray(data) ? data.length : 0,
+        })
+
+        if (Array.isArray(data)) {
+          const sortedCommits = [...data].sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
+          setCommits(sortedCommits)
+        } else {
+          throw new Error("Received invalid data format from server")
+        }
+      } catch (error) {
+        console.error("Top level error:", error)
+        setError(error instanceof Error ? error.message : "Failed to initialize")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initializeAndFetch()
   }, [fullName])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
       router.push(`${window.location.pathname}/thread/new?commit=${commit.sha}`)
-    }
-  }
-
-  const fetchCommits = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session?.provider_token) {
-        setLoading(false)
-        return
-      }
-
-      const response = await fetch(`/api/github/commits/${fullName}?page=1&per_page=100&sort=created&direction=asc`, {
-        headers: {
-          Authorization: `Bearer ${session.provider_token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch commits: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      if (Array.isArray(data)) {
-        const sortedCommits = [...data].sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
-        setCommits(sortedCommits)
-      } else {
-        console.error("Unexpected response format:", data)
-        setError("Received invalid data format from server")
-      }
-    } catch (error) {
-      console.error("Error fetching commits:", error)
-      setError(error instanceof Error ? error.message : "Failed to fetch commits")
-    } finally {
-      setLoading(false)
     }
   }
 
