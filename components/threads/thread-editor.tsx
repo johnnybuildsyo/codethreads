@@ -119,37 +119,40 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
   }
 
   const handleSubmit = async () => {
-    setIsSubmitting(true)
-    const supabase = createClient()
+    // setIsSubmitting(true)
 
-    try {
-      const content = sections
-        .filter((s) => s.type === "markdown")
-        .map((s) => s.content)
-        .join("\n\n")
+    console.log("handleSubmit sections", JSON.stringify({ projectId, title, sections }, null, 2))
 
-      const { data: thread } = await supabase
-        .from("threads")
-        .insert({
-          project_id: projectId,
-          title,
-          teaser: content.slice(0, 280),
-        })
-        .select()
-        .single()
+    // const supabase = createClient()
 
-      await supabase.from("posts").insert({
-        thread_id: thread.id,
-        intro: content,
-        commit_sha: commit.sha,
-      })
+    // try {
+    //   const content = sections
+    //     .filter((s) => s.type === "markdown")
+    //     .map((s) => s.content)
+    //     .join("\n\n")
 
-      router.push(getProjectPath())
-    } catch (error) {
-      console.error("Failed to create thread:", error)
-    } finally {
-      setIsSubmitting(false)
-    }
+    //   const { data: thread } = await supabase
+    //     .from("threads")
+    //     .insert({
+    //       project_id: projectId,
+    //       title,
+    //       teaser: content.slice(0, 280),
+    //     })
+    //     .select()
+    //     .single()
+
+    //   await supabase.from("posts").insert({
+    //     thread_id: thread.id,
+    //     intro: content,
+    //     commit_sha: commit.sha,
+    //   })
+
+    //   router.push(getProjectPath())
+    // } catch (error) {
+    //   console.error("Failed to create thread:", error)
+    // } finally {
+    //   setIsSubmitting(false)
+    // }
   }
 
   useEffect(() => {
