@@ -125,22 +125,36 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
     try {
       const cleanedSections = sections.map((section) => {
+        console.log("Cleaning section:", section)
+
         if (section.type === "markdown") {
           return {
             id: section.id,
             type: section.type,
-            content: section.content,
+            content: section.content || "", // Ensure content is never null
             role: section.role,
           }
         }
-        return {
+
+        // For non-markdown sections
+        const cleaned = {
           id: section.id,
           type: section.type,
           filename: section.file?.filename,
         }
+        console.log("Cleaned non-markdown section:", cleaned)
+        return cleaned
       })
 
-      const { data: thread, error } = await supabase
+      console.log("Submitting thread:", {
+        project_id: projectId,
+        title,
+        sections: cleanedSections,
+        commit_shas: [commit.sha],
+        published_at: publish ? new Date().toISOString() : null,
+      })
+
+      const { data, error } = await supabase
         .from("threads")
         .insert({
           project_id: projectId,
@@ -152,8 +166,12 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error("Supabase error:", error)
+        throw error
+      }
 
+      console.log("Thread created:", data)
       toast.success(publish ? "Thread published!" : "Draft saved!")
       router.push(getProjectPath())
     } catch (error) {
