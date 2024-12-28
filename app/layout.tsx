@@ -10,7 +10,7 @@ const displayFont = Rethink_Sans({
 })
 
 export const metadata = {
-  title: "Code Threads",
+  title: "CodeThreads",
   description: "Live coding in post thread format",
 }
 
