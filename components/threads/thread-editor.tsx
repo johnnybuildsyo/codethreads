@@ -461,11 +461,20 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
             selections
               .filter((s) => s.type !== "commit-links")
               .forEach((selection, i) => {
-                newSections.splice(index + 1 + i, 0, {
-                  id: crypto.randomUUID(),
-                  type: selection.type,
-                  file: selection.file,
-                })
+                if (selection.type === "code") {
+                  newSections.splice(index + 1 + i, 0, {
+                    id: crypto.randomUUID(),
+                    type: "code",
+                    content: selection.file.newValue,
+                    filename: selection.file.filename,
+                  })
+                } else {
+                  newSections.splice(index + 1 + i, 0, {
+                    id: crypto.randomUUID(),
+                    type: selection.type,
+                    file: selection.file,
+                  })
+                }
               })
 
             return newSections

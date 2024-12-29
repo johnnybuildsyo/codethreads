@@ -66,12 +66,12 @@ export function ThreadPreview({ title, sections, theme }: ThreadPreviewProps) {
                   <ReactMarkdown>{section.content}</ReactMarkdown>
                 </div>
               )}
-              {section.type === "code" && section.file && (
+              {section.type === "code" && section.content && (
                 <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
-                  <div className="text-xs text-muted-foreground p-4 pb-0">{section.file.filename}</div>
+                  <div className="text-xs text-muted-foreground p-4 pb-0">{section.filename}</div>
                   <div className="overflow-auto">
-                    <SyntaxHighlighter language={getLanguageFromFilename(section.file.filename)} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
-                      {section.file.newValue}
+                    <SyntaxHighlighter language={getLanguageFromFilename(section.filename || "")} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
+                      {section.content}
                     </SyntaxHighlighter>
                   </div>
                 </div>
