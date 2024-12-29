@@ -27,7 +27,6 @@ import { FileChange, ThreadSection } from "./editor/types"
 import { ThreadIdeas } from "./editor/thread-ideas"
 import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
 import { LoadingAnimation } from "../ui/loading-animation"
-import ReactMarkdown from "react-markdown"
 import type { Thread } from "@/types/thread"
 import { upsertThread } from "@/app/api/threads/actions"
 import { CommitLink } from "./commit-link"
@@ -87,10 +86,31 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   const [diffDialogOpen, setDiffDialogOpen] = useState(false)
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false)
 
-  let codeChanges = files
-    .filter((f) => !shouldExcludeFile(f.filename))
-    .map((f) => `File: ${f.filename}\n\nChanges:\n${f.newValue}`)
-    .join("\n\n---\n\n")
+  // Get filenames from code sections
+  const referencedFiles = useMemo(() => {
+    const codeFilenames = new Set<string>()
+    sections.forEach((section) => {
+      if (section.type === "code" || section.type === "diff") {
+        if (section.file?.filename) {
+          codeFilenames.add(section.file.filename)
+        }
+      } else if (section.type === "commit-links" && section.commits) {
+        section.commits.forEach((link) => {
+          codeFilenames.add(link.filename)
+        })
+      }
+    })
+    return codeFilenames
+  }, [sections])
+
+  // If we have code sections, only use those files. Otherwise, use all files.
+  let codeChanges = useMemo(() => {
+    const relevantFiles = referencedFiles.size > 0 ? files.filter((f) => referencedFiles.has(f.filename)) : files.filter((f) => !shouldExcludeFile(f.filename))
+
+    console.log("relevantFiles", relevantFiles)
+
+    return relevantFiles.map((f) => `File: ${f.filename}\n\nChanges:\n${f.newValue}`).join("\n\n---\n\n")
+  }, [files, referencedFiles])
 
   // Truncate if too long
   codeChanges = codeChanges.length > 20000 ? codeChanges.slice(0, 20000) + "...(truncated)" : codeChanges
@@ -206,6 +226,8 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
       setSections((current) => current.map((s) => (s.id === section.id ? { ...s, content: content } : s)))
     }
 
+    console.log("prompt", prompt)
+
     await getStreamingText(prompt, updateSectionContent)
   }
 
@@ -242,8 +264,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
       toast.error("Failed to upload image. Please try again.")
     }
   }
-
-  console.log({ thread, sections })
 
   return (
     <ThreadProvider>
