@@ -88,38 +88,6 @@ export type Database = {
           },
         ]
       }
-      posts: {
-        Row: {
-          commit_sha: string | null
-          content: string
-          created_at: string
-          id: string
-          thread_id: string
-        }
-        Insert: {
-          commit_sha?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          thread_id: string
-        }
-        Update: {
-          commit_sha?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          thread_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "posts_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "threads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -211,31 +179,31 @@ export type Database = {
           created_at: string
           id: string
           project_id: string
-          teaser: string | null
           title: string
           updated_at: string
           published_at: string | null
           sections: Json
+          commit_shas: string[]
         }
         Insert: {
           created_at?: string
           id?: string
           project_id: string
-          teaser?: string | null
           title: string
           updated_at?: string
           published_at?: string | null
           sections?: Json
+          commit_shas?: string[]
         }
         Update: {
           created_at?: string
           id?: string
           project_id?: string
-          teaser?: string | null
           title?: string
           updated_at?: string
           published_at?: string | null
           sections?: Json
+          commit_shas?: string[]
         }
         Relationships: [
           {

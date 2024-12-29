@@ -7,6 +7,7 @@ import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
+import { ThreadList } from "@/components/threads/thread-list"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -80,7 +81,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const isOwner = session?.user?.id === project.owner_id
 
   // Get threads for this project
-  const { data: threads } = await supabase.from("threads").select("*").eq("project_id", project.id).order("created_at", { ascending: false })
+  const { data: threads } = await supabase.from("threads").select("*, commit_shas").eq("project_id", project.id).order("created_at", { ascending: false })
 
   return (
     <div className="min-h-screen bg-background">
@@ -171,6 +172,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
+          <div className="md:col-span-3">
+            <h2 className="text-2xl font-bold mb-4">CodeThreads</h2>
+            <ThreadList threads={threads || []} username={username} projectId={projectId} />
+          </div>
           <div className="grid gap-8 md:grid-cols-3 mt-8">
             {isOwner && (
               <div className="md:col-span-3">

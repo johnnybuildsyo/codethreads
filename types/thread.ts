@@ -12,11 +12,14 @@ export interface ThreadPost {
 }
 
 export interface Thread {
-  id: number
+  id: string
   title: string
-  date: string
-  teaser: string
-  posts: ThreadPost[]
+  sections: any
+  commit_shas: string[]
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  project_id: string
 }
 
 export interface ThreadCardProps {
