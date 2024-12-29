@@ -214,6 +214,8 @@ export type Database = {
           teaser: string | null
           title: string
           updated_at: string
+          published_at: string | null
+          sections: Json
         }
         Insert: {
           created_at?: string
@@ -222,6 +224,8 @@ export type Database = {
           teaser?: string | null
           title: string
           updated_at?: string
+          published_at?: string | null
+          sections?: Json
         }
         Update: {
           created_at?: string
@@ -230,6 +234,8 @@ export type Database = {
           teaser?: string | null
           title?: string
           updated_at?: string
+          published_at?: string | null
+          sections?: Json
         }
         Relationships: [
           {

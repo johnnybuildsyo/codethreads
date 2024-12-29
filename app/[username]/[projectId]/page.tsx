@@ -172,9 +172,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
-          <div className="mt-8 border-t py-8">
-            <ThreadList threads={threads || []} username={username} projectId={projectId} />
-          </div>
           <div className="grid gap-8 md:grid-cols-3 mt-8">
             {isOwner && (
               <div className="md:col-span-3">
