@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -31,6 +31,7 @@ import type { Thread } from "@/types/thread"
 import { upsertThread } from "@/app/api/threads/actions"
 import { CommitLink } from "./commit-link"
 import { CommitLinkSelector } from "./editor/commit-link-selector"
+import { Switch } from "@/components/ui/switch"
 
 interface ThreadEditorProps {
   projectId: string
@@ -85,6 +86,9 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   const [activeSectionId, setActiveSectionId] = useState<string>()
   const [diffDialogOpen, setDiffDialogOpen] = useState(false)
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved")
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
 
   // Get filenames from code sections
   const referencedFiles = useMemo(() => {
@@ -265,13 +269,82 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
     }
   }
 
+  // Debounced auto-save handler
+  const debouncedSave = useCallback(
+    async (title: string, sections: ThreadSection[]) => {
+      if (!autoSaveEnabled) return
+
+      setSaveStatus("saving")
+      try {
+        const cleanedSections = sections.map((section) => {
+          if (section.type === "markdown") {
+            return {
+              id: section.id,
+              type: section.type,
+              content: section.content || "",
+              role: section.role,
+            }
+          }
+          return {
+            id: section.id,
+            type: section.type,
+            content: section.content,
+            filename: section.file?.filename,
+            commits: section.commits,
+          }
+        })
+
+        const threadData = {
+          title,
+          sections: cleanedSections,
+          commit_shas: [commit.sha],
+          published_at: null,
+        }
+
+        const { success } = await upsertThread(projectId, threadData, thread?.id)
+        if (success) {
+          setSaveStatus("saved")
+          setLastSavedAt(new Date())
+        } else {
+          setSaveStatus("error")
+        }
+      } catch (error) {
+        console.error("Auto-save failed:", error)
+        setSaveStatus("error")
+      }
+    },
+    [autoSaveEnabled, projectId, commit.sha, thread?.id]
+  )
+
+  // Auto-save when content changes
+  useEffect(() => {
+    if (!title) return // Don't auto-save if there's no title
+
+    const timeoutId = setTimeout(() => {
+      debouncedSave(title, sections)
+    }, 2000) // Wait 2 seconds after last change
+
+    return () => clearTimeout(timeoutId)
+  }, [title, sections, debouncedSave])
+
   return (
     <ThreadProvider>
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
         <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
-          <div className="flex justify-between items-center">
+          <div className="flex gap-4 justify-between items-center">
             <h3 className="text-2xl font-bold">{thread ? "Edit CodeThread" : "New CodeThread"}</h3>
             <AIConnect enabled={aiEnabled} />
+            <div className="flex flex-col items-end gap-1 ml-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Auto-save</span>
+                <Switch className="scale-75" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} />
+              </div>
+              <div className="text-[10px] text-muted-foreground font-mono">
+                {saveStatus === "saving" && <span>Saving...</span>}
+                {saveStatus === "saved" && lastSavedAt && <span>Last saved at {new Date(lastSavedAt).toLocaleTimeString()}</span>}
+                {saveStatus === "error" && <span className="text-destructive">Save failed</span>}
+              </div>
+            </div>
           </div>
 
           {threadIdeas.length > 0 && <ThreadIdeas ideas={threadIdeas} onClose={() => setThreadIdeas([])} />}
@@ -440,13 +513,16 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
               <Button variant="ghost" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button variant="outline" onClick={() => handleSubmit(false)} disabled={!title || isSubmitting}>
-                <Save className="h-4 w-4 opacity-50" />
-                {thread ? "Save Changes" : "Save as Draft"}
-              </Button>
+              {!autoSaveEnabled && (
+                <Button variant="outline" onClick={() => handleSubmit(false)} disabled={!title || isSubmitting}>
+                  <Save className="h-4 w-4 opacity-50" />
+                  {thread ? "Save Changes" : "Save as Draft"}
+                </Button>
+              )}
+
               <Button onClick={() => handleSubmit(true)} disabled={!title || isSubmitting}>
                 <Zap className="h-4 w-4 opacity-70" />
-                {thread ? "Update & Publish" : "Publish CodeThread"}
+                {thread ? (autoSaveEnabled ? "Update & Publish" : "Publish CodeThread") : "Publish CodeThread"}
               </Button>
             </div>
           )}
