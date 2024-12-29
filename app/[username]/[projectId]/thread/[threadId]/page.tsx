@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Header from "@/components/layout/header"
-import { ThreadCard } from "@/components/threads/thread-card"
+import { ThreadView } from "@/components/threads/thread-view"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
@@ -34,13 +34,13 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 w-full max-w-6xl">
         <Link href={`/${username}/${projectId}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6">
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to project
         </Link>
 
-        <ThreadCard thread={thread} username={username} projectId={projectId} featured={true} />
+        <ThreadView thread={thread} />
 
         <div className="flex justify-between mt-8">
           {prevThread ? (

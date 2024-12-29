@@ -13,6 +13,13 @@ const config: Config = {
   		fontFamily: {
   			display: ["var(--font-display)", "serif"]
   		},
+  		typography: {
+  			DEFAULT: {
+  				css: {
+  					maxWidth: '72rem'
+  				}
+  			}
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
