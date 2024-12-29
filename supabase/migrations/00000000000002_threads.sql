@@ -1,6 +1,7 @@
 create table public.threads (
   id uuid default gen_random_uuid() primary key,
   project_id uuid references projects(id) not null,
+  user_id uuid references auth.users(id) not null,
   title text not null,
   sections jsonb not null,
   commit_shas text[] not null default array[]::text[],
@@ -25,4 +26,8 @@ create policy "Project owners can create threads"
       where id = project_id 
       and owner_id = auth.uid()
     )
-  ); 
+  );
+
+create policy "Thread authors can update their threads"
+  on threads for update
+  using ( auth.uid() = user_id ); 

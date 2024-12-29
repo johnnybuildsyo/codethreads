@@ -95,11 +95,11 @@ export type Database = {
           created_at: string
           github_username: string | null
           id: string
+          links: Json | null
           name: string | null
           twitter_username: string | null
           updated_at: string
           username: string
-          links: { title: string; url: string }[] | null
         }
         Insert: {
           avatar_url?: string | null
@@ -107,11 +107,11 @@ export type Database = {
           created_at?: string
           github_username?: string | null
           id: string
+          links?: Json | null
           name?: string | null
           twitter_username?: string | null
           updated_at?: string
           username: string
-          links?: { title: string; url: string }[] | null
         }
         Update: {
           avatar_url?: string | null
@@ -119,11 +119,11 @@ export type Database = {
           created_at?: string
           github_username?: string | null
           id?: string
+          links?: Json | null
           name?: string | null
           twitter_username?: string | null
           updated_at?: string
           username?: string
-          links?: { title: string; url: string }[] | null
         }
         Relationships: []
       }
@@ -176,34 +176,37 @@ export type Database = {
       }
       threads: {
         Row: {
+          commit_shas: string[]
           created_at: string
           id: string
           project_id: string
-          title: string
-          updated_at: string
           published_at: string | null
           sections: Json
-          commit_shas: string[]
+          title: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
+          commit_shas?: string[]
           created_at?: string
           id?: string
           project_id: string
+          published_at?: string | null
+          sections: Json
           title: string
           updated_at?: string
-          published_at?: string | null
-          sections?: Json
-          commit_shas?: string[]
+          user_id: string
         }
         Update: {
+          commit_shas?: string[]
           created_at?: string
           id?: string
           project_id?: string
-          title?: string
-          updated_at?: string
           published_at?: string | null
           sections?: Json
-          commit_shas?: string[]
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {

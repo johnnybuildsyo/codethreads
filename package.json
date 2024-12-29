@@ -16,7 +16,7 @@
     "db:status": "supabase status",
     "db:local:push": "supabase db push --local",
     "db:local:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
-    "db:local:reset": "supabase db reset --local && supabase db push --local",
+    "db:local:reset": "supabase db reset --local && supabase db push --local && pnpm db:local:types",
     "db:local:new": "supabase migration new",
     "db:local:list": "supabase migration list --local",
     "db:local:status": "supabase status --local",

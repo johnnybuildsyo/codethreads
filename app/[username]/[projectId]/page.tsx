@@ -173,7 +173,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
           <p className="text-muted-foreground">{project.description}</p>
           <div className="md:col-span-3 mt-8">
-            <h2 className="font-mono mb-4">CodeThreads</h2>
             <ThreadList threads={threads || []} username={username} projectId={projectId} />
           </div>
           <div className="grid gap-8 md:grid-cols-3 mt-8">

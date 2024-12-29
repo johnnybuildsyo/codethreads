@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
@@ -29,6 +28,8 @@ import { ThreadIdeas } from "./editor/thread-ideas"
 import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
 import { LoadingAnimation } from "../ui/loading-animation"
 import ReactMarkdown from "react-markdown"
+import type { Thread } from "@/types/thread"
+import { upsertThread } from "@/app/api/threads/actions"
 
 interface ThreadEditorProps {
   projectId: string
@@ -39,36 +40,39 @@ interface ThreadEditorProps {
     authored_at: string
   }
   fullName: string
+  thread?: Thread
 }
 
-export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps) {
+export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEditorProps) {
   const { theme } = useTheme()
-  const [title, setTitle] = useState("")
+  const [title, setTitle] = useState(thread?.title || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
   const router = useRouter()
   const params = useParams()
-  const [sections, setSections] = useState<ThreadSection[]>([
-    {
-      id: crypto.randomUUID(),
-      type: "markdown",
-      content: "",
-      role: "intro",
-    },
-    {
-      id: crypto.randomUUID(),
-      type: "markdown",
-      content: "",
-      role: "details",
-    },
-    {
-      id: crypto.randomUUID(),
-      type: "markdown",
-      content: "",
-      role: "summary",
-    },
-  ])
+  const [sections, setSections] = useState<ThreadSection[]>(
+    thread?.sections || [
+      {
+        id: crypto.randomUUID(),
+        type: "markdown",
+        content: "",
+        role: "intro",
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "markdown",
+        content: "",
+        role: "details",
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "markdown",
+        content: "",
+        role: "summary",
+      },
+    ]
+  )
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -122,12 +126,9 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
 
   const handleSubmit = async (publish: boolean = false) => {
     setIsSubmitting(true)
-    const supabase = createClient()
 
     try {
       const cleanedSections = sections.map((section) => {
-        console.log("Cleaning section:", section)
-
         if (section.type === "markdown") {
           return {
             id: section.id,
@@ -143,41 +144,25 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
           type: section.type,
           filename: section.file?.filename,
         }
-        console.log("Cleaned non-markdown section:", cleaned)
         return cleaned
       })
 
-      console.log("Submitting thread:", {
-        project_id: projectId,
+      const threadData = {
         title,
         sections: cleanedSections,
         commit_shas: [commit.sha],
         published_at: publish ? new Date().toISOString() : null,
-      })
-
-      const { data, error } = await supabase
-        .from("threads")
-        .insert({
-          project_id: projectId,
-          title,
-          sections: cleanedSections,
-          commit_shas: [commit.sha],
-          published_at: publish ? new Date().toISOString() : null,
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Supabase error:", error)
-        throw error
       }
 
-      console.log("Thread created:", data)
-      toast.success(publish ? "Thread published!" : "Draft saved!")
-      router.push(getProjectPath())
-    } catch (error) {
+      const { success, path } = await upsertThread(projectId, threadData, thread?.id)
+
+      if (success) {
+        toast.success(publish ? "Thread published!" : thread ? "Thread updated!" : "Draft saved!")
+        router.push(path)
+      }
+    } catch (error: any) {
       console.error("Failed to save thread:", error)
-      toast.error("Failed to save thread. Please try again.")
+      toast.error(error.message || "Failed to save thread. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -264,7 +249,7 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
         <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold">New CodeThread</h3>
+            <h3 className="text-2xl font-bold">{thread ? "Edit CodeThread" : "New CodeThread"}</h3>
             <AIConnect enabled={aiEnabled} />
           </div>
 
@@ -414,11 +399,11 @@ export function ThreadEditor({ projectId, commit, fullName }: ThreadEditorProps)
               </Button>
               <Button variant="outline" onClick={() => handleSubmit(false)} disabled={!title || isSubmitting}>
                 <Save className="h-4 w-4 opacity-50" />
-                Save as Draft
+                {thread ? "Save Changes" : "Save as Draft"}
               </Button>
               <Button onClick={() => handleSubmit(true)} disabled={!title || isSubmitting}>
                 <Zap className="h-4 w-4 opacity-70" />
-                Publish CodeThread
+                {thread ? "Update & Publish" : "Publish CodeThread"}
               </Button>
             </div>
           )}
