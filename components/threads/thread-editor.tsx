@@ -31,6 +31,7 @@ import ReactMarkdown from "react-markdown"
 import type { Thread } from "@/types/thread"
 import { upsertThread } from "@/app/api/threads/actions"
 import { CommitLink } from "./commit-link"
+import { CommitLinkSelector } from "./editor/commit-link-selector"
 
 interface ThreadEditorProps {
   projectId: string
@@ -84,6 +85,7 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   const [threadIdeas, setThreadIdeas] = useState<string[]>([])
   const [activeSectionId, setActiveSectionId] = useState<string>()
   const [diffDialogOpen, setDiffDialogOpen] = useState(false)
+  const [linkSelectorOpen, setLinkSelectorOpen] = useState(false)
 
   let codeChanges = files
     .filter((f) => !shouldExcludeFile(f.filename))
@@ -369,15 +371,28 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
                       )}
                       {section.type === "commit-links" && section.commits && (
                         <div className="relative">
-                          <Button variant="ghost" className="absolute -right-7 h-6 w-6 p-0" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <div className="flex flex-col gap-2 absolute -right-8 px-1">
+                            <Button variant="ghost" className="h-6 w-6 p-0" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                           <div className="not-prose flex flex-col gap-1">
                             {section.commits.map((link) => (
                               <div key={link.filename}>
                                 <CommitLink filename={link.filename} sha={link.sha} fullName={fullName} />
                               </div>
                             ))}
+                            <div>
+                              <button
+                                className="text-xs pl-4"
+                                onClick={() => {
+                                  setActiveSectionId(section.id)
+                                  setLinkSelectorOpen(true)
+                                }}
+                              >
+                                + add links
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -432,6 +447,7 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
           setSections((current) => {
             const index = current.findIndex((s) => s.id === activeSectionId)
             const newSections = [...current]
+            const activeSection = newSections[index]
 
             // Group file-link selections into a single commit-links section
             const fileLinks = selections
@@ -442,12 +458,25 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
               }))
 
             if (fileLinks.length > 0) {
-              newSections.splice(index + 1, 0, {
-                id: crypto.randomUUID(),
-                type: "commit-links",
-                content: fileLinks.map((link) => `[${link.filename}](https://github.com/${fullName}/blob/${link.sha}/${link.filename})`).join("\n\n"),
-                commits: fileLinks,
-              })
+              if (activeSection?.type === "commit-links" && activeSection.commits) {
+                // Merge new links with existing ones, avoiding duplicates
+                const existingFilenames = new Set(activeSection.commits.map((c) => c.filename))
+                const uniqueNewLinks = fileLinks.filter((link) => !existingFilenames.has(link.filename))
+
+                newSections[index] = {
+                  ...activeSection,
+                  content: [...(activeSection.commits || []), ...uniqueNewLinks].map((link) => `[${link.filename}](https://github.com/${fullName}/blob/${link.sha}/${link.filename})`).join("\n\n"),
+                  commits: [...(activeSection.commits || []), ...uniqueNewLinks],
+                }
+              } else {
+                // Create new commit-links section
+                newSections.splice(index + 1, 0, {
+                  id: crypto.randomUUID(),
+                  type: "commit-links",
+                  content: fileLinks.map((link) => `[${link.filename}](https://github.com/${fullName}/blob/${link.sha}/${link.filename})`).join("\n\n"),
+                  commits: fileLinks,
+                })
+              }
             }
 
             // Add remaining diff/code sections
@@ -474,6 +503,41 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
           })
           setDiffDialogOpen(false)
           setActiveSectionId(undefined)
+        }}
+      />
+
+      <CommitLinkSelector
+        open={linkSelectorOpen}
+        onClose={() => {
+          setLinkSelectorOpen(false)
+          setActiveSectionId(undefined)
+        }}
+        files={files}
+        existingLinks={sections.find((s) => s.id === activeSectionId)?.commits || []}
+        onSelect={(selectedFiles) => {
+          setSections((current) => {
+            const index = current.findIndex((s) => s.id === activeSectionId)
+            const activeSection = current[index]
+
+            if (activeSection?.type === "commit-links") {
+              const existingCommits = activeSection.commits || []
+              const newLinks = selectedFiles.map((file) => ({
+                sha: commit.sha,
+                filename: file.filename,
+              }))
+
+              return current.map((section, i) =>
+                i === index
+                  ? {
+                      ...section,
+                      content: [...existingCommits, ...newLinks].map((link) => `[${link.filename}](https://github.com/${fullName}/blob/${link.sha}/${link.filename})`).join("\n\n"),
+                      commits: [...existingCommits, ...newLinks],
+                    }
+                  : section
+              )
+            }
+            return current
+          })
         }}
       />
     </ThreadProvider>
