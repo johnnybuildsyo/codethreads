@@ -7,7 +7,6 @@ import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { ProjectNameEditor } from "@/components/projects/project-name-editor"
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
-import { ThreadList } from "@/components/threads/thread-list"
 
 interface ProjectPageProps {
   params: Promise<{
