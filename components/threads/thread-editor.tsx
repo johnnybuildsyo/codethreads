@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Bolt, Zap, Save } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Bolt, Zap, Save, Github, ExternalLink } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -30,6 +30,7 @@ import { LoadingAnimation } from "../ui/loading-animation"
 import ReactMarkdown from "react-markdown"
 import type { Thread } from "@/types/thread"
 import { upsertThread } from "@/app/api/threads/actions"
+import { CommitLink } from "./commit-link"
 
 interface ThreadEditorProps {
   projectId: string
@@ -142,7 +143,9 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
         const cleaned = {
           id: section.id,
           type: section.type,
+          content: section.content,
           filename: section.file?.filename,
+          commits: section.commits,
         }
         return cleaned
       })
@@ -167,12 +170,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
       setIsSubmitting(false)
     }
   }
-
-  useEffect(() => {
-    setSections((current) => {
-      return current.filter((s) => s.type === "markdown")
-    })
-  }, [selectedDiffs])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -243,6 +240,8 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
       toast.error("Failed to upload image. Please try again.")
     }
   }
+
+  console.log({ thread, sections })
 
   return (
     <ThreadProvider>
@@ -368,9 +367,18 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
                           )}
                         </div>
                       )}
-                      {section.type === "commit-links" && section.content && (
-                        <div className="prose dark:prose-invert">
-                          <ReactMarkdown>{section.content}</ReactMarkdown>
+                      {section.type === "commit-links" && section.commits && (
+                        <div className="relative">
+                          <Button variant="ghost" className="absolute -right-7 h-6 w-6 p-0" onClick={() => setSections((s) => s.filter((item) => item.id !== section.id))}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <div className="not-prose flex flex-col gap-1">
+                            {section.commits.map((link) => (
+                              <div key={link.filename}>
+                                <CommitLink filename={link.filename} sha={link.sha} fullName={fullName} />
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </SortableItem>

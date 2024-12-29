@@ -1,10 +1,6 @@
-import { CommitDiff } from "./commit-diff"
-import ReactMarkdown from "react-markdown"
 import { ThreadSection } from "./types"
 import { ThreadProvider } from "./thread-context"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
-import { getLanguageFromFilename } from "@/lib/utils"
+import { ThreadContent } from "../thread-content"
 
 interface ThreadPreviewProps {
   title: string
@@ -19,10 +15,8 @@ interface ThreadPreviewProps {
   }
 }
 
-export function ThreadPreview({ title, sections, theme }: ThreadPreviewProps) {
+export function ThreadPreview({ title, sections, theme, fullName }: ThreadPreviewProps) {
   const isEmpty = !title && sections.every((section) => (section.type === "markdown" ? !section.content : false))
-
-  console.log("ThreadPreview", { sections })
 
   if (isEmpty) {
     return (
@@ -46,39 +40,7 @@ export function ThreadPreview({ title, sections, theme }: ThreadPreviewProps) {
   return (
     <ThreadProvider defaultView="preview">
       <div className="space-y-8 border-l pl-8 pb-8">
-        <h1 className="text-3xl font-bold mb-4">{title || "Untitled Thread"}</h1>
-        <div className="space-y-8">
-          {sections.map((section) => (
-            <div key={section.id}>
-              {section.type === "markdown" && (
-                <div className="prose dark:prose-invert">
-                  <ReactMarkdown>{section.content || ""}</ReactMarkdown>
-                </div>
-              )}
-              {section.type === "diff" && section.file && <CommitDiff files={[section.file]} defaultRenderDiff={true} theme={theme} />}
-              {section.type === "image" && section.imageUrl && (
-                <div className="my-4">
-                  <img src={section.imageUrl} alt="" className="rounded-lg" />
-                </div>
-              )}
-              {section.type === "commit-links" && section.content && (
-                <div className="prose dark:prose-invert">
-                  <ReactMarkdown>{section.content}</ReactMarkdown>
-                </div>
-              )}
-              {section.type === "code" && section.content && (
-                <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
-                  <div className="text-xs text-muted-foreground p-4 pb-0">{section.filename}</div>
-                  <div className="overflow-auto">
-                    <SyntaxHighlighter language={getLanguageFromFilename(section.filename || "")} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
-                      {section.content}
-                    </SyntaxHighlighter>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <ThreadContent title={title} sections={sections} theme={theme} fullName={fullName} />
       </div>
     </ThreadProvider>
   )
