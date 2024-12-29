@@ -1,4 +1,5 @@
 import { FileChange } from "@/components/threads/editor/types"
+import { User } from "@supabase/supabase-js"
 
 export interface ThreadPost {
   id: number
@@ -20,6 +21,7 @@ export interface Thread {
   created_at: string
   updated_at: string
   project_id: string
+  user_id: string
 }
 
 export interface ThreadCardProps {
@@ -27,4 +29,5 @@ export interface ThreadCardProps {
   username: string
   projectId: string
   featured?: boolean
+  currentUser?: User | null
 } 
