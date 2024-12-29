@@ -172,8 +172,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
-          <div className="md:col-span-3">
-            <h2 className="text-2xl font-bold mb-4">CodeThreads</h2>
+          <div className="md:col-span-3 mt-8">
+            <h2 className="font-mono mb-4">CodeThreads</h2>
             <ThreadList threads={threads || []} username={username} projectId={projectId} />
           </div>
           <div className="grid gap-8 md:grid-cols-3 mt-8">
