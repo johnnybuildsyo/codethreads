@@ -163,7 +163,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
               <Button asChild>
                 <Link href={`${window.location.pathname}/thread/new?commit=${commit.sha}`}>
                   <Plus className="h-4 w-4" />
-                  Start CodeThread
+                  Start Thread
                 </Link>
               </Button>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
