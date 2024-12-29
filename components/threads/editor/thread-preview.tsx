@@ -19,8 +19,10 @@ interface ThreadPreviewProps {
   }
 }
 
-export function ThreadPreview({ title, sections, theme, fullName, commit }: ThreadPreviewProps) {
+export function ThreadPreview({ title, sections, theme }: ThreadPreviewProps) {
   const isEmpty = !title && sections.every((section) => (section.type === "markdown" ? !section.content : false))
+
+  console.log("ThreadPreview", { sections })
 
   if (isEmpty) {
     return (
