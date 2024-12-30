@@ -6,23 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LogoIcon from "@/components/graphics/logo-icon"
-import { Session, User } from "@supabase/supabase-js"
-import { AvatarUpload } from "@/components/auth/avatar-upload"
 
 export default function WelcomePage() {
   const [username, setUsername] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [session, setSession] = useState<Session | null>(null)
-  const [user, setUser] = useState<User | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>("")
 
   useEffect(() => {
     const supabase = createClient()
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user || null)
       // Set initial avatar and username from GitHub
       if (session?.user) {
         setAvatarUrl(session.user.user_metadata.avatar_url)
@@ -31,16 +25,6 @@ export default function WelcomePage() {
         }
       }
     })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user || null)
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

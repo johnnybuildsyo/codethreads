@@ -1,7 +1,6 @@
 "use client"
 
 import { ChangeEvent, useRef } from "react"
-import { Button } from "@/components/ui/button"
 import { Camera, Edit } from "lucide-react"
 import { cn } from "@/lib/utils"
 

@@ -2,13 +2,16 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+import { Database } from "@/lib/supabase/database.types"
 
-interface ThreadData {
-  title: string
-  sections: any[]
-  commit_shas: string[]
-  published_at: string | null
+type ThreadSection = {
+  type: "markdown" | "commit-links"
+  content: string
+  role?: "intro" | "body" | "conclusion"
+}
+
+type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas" | "published_at"> & {
+  sections: ThreadSection[]
 }
 
 export async function upsertThread(projectId: string, threadData: ThreadData, threadId?: string) {
@@ -39,7 +42,8 @@ export async function upsertThread(projectId: string, threadData: ThreadData, th
   const data = {
     project_id: projectId,
     user_id: session.user.id,
-    ...threadData
+    ...threadData,
+    sections: threadData.sections as unknown as Database["public"]["Tables"]["threads"]["Insert"]["sections"]
   }
 
   try {

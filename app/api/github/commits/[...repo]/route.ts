@@ -20,8 +20,6 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const page = searchParams.get("page") || "1";
   const per_page = searchParams.get("per_page") || "30";
-  const sort = searchParams.get("sort") || "created";
-  const direction = searchParams.get("direction") || "asc";
 
   const apiUrl = `https://api.github.com/repos/${owner}/${repository}/commits?page=${page}&per_page=${per_page}`;
   console.log(apiUrl);

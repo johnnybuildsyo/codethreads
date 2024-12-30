@@ -4,10 +4,50 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 import { getLanguageFromFilename } from "@/lib/utils"
 import { CommitLink } from "./commit-link"
 import { CommitDiff } from "./editor/commit-diff"
+import { FileChange } from "./editor/types"
+
+type CommitLink = {
+  filename: string
+  sha: string
+}
+
+type BaseSection = {
+  id: string
+  type: string
+  content?: string
+}
+
+type MarkdownSection = BaseSection & {
+  type: "markdown"
+  content: string
+}
+
+type CodeSection = BaseSection & {
+  type: "code"
+  filename: string
+  content: string
+}
+
+type DiffSection = BaseSection & {
+  type: "diff"
+  file: FileChange
+}
+
+type ImageSection = BaseSection & {
+  type: "image"
+  imageUrl: string
+}
+
+type CommitLinksSection = BaseSection & {
+  type: "commit-links"
+  commits: CommitLink[]
+}
+
+type ThreadSection = MarkdownSection | CodeSection | DiffSection | ImageSection | CommitLinksSection
 
 interface ThreadContentProps {
   title: string
-  sections: any[]
+  sections: ThreadSection[]
   theme?: string
   fullName: string
   showDate?: boolean
@@ -41,7 +81,7 @@ export function ThreadContent({ title, sections, theme, fullName, showDate, crea
               <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
                 <div className="text-xs text-muted-foreground p-4 pb-0">{section.filename}</div>
                 <div className="overflow-auto">
-                  <SyntaxHighlighter language={getLanguageFromFilename(section.filename || "")} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
+                  <SyntaxHighlighter language={getLanguageFromFilename(section.filename)} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
                     {section.content}
                   </SyntaxHighlighter>
                 </div>
@@ -55,7 +95,7 @@ export function ThreadContent({ title, sections, theme, fullName, showDate, crea
             )}
             {section.type === "commit-links" && section.commits && (
               <div className="not-prose flex flex-col gap-1">
-                {section.commits.map((link: any) => (
+                {section.commits.map((link) => (
                   <div key={link.filename}>
                     <CommitLink filename={link.filename} sha={link.sha} fullName={fullName} />
                   </div>
