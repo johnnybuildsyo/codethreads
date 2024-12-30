@@ -56,6 +56,7 @@ export default function Hero() {
         setIsOnWaitlist(true)
       }
     } catch (error) {
+      console.error(error)
       toast.error("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)

@@ -176,9 +176,9 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
         toast.success(publish ? "Thread published!" : thread ? "Thread updated!" : "Draft saved!")
         router.push(path)
       }
-    } catch (error: any) {
-      console.error("Failed to save thread:", error)
-      toast.error(error.message || "Failed to save thread. Please try again.")
+    } catch (error) {
+      console.error("Failed to save thread", error)
+      toast.error("Failed to save thread. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
