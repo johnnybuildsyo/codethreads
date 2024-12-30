@@ -22,6 +22,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const isLocal = process.env.NEXT_PUBLIC_VERCEL_ENV === undefined
 
   useEffect(() => {
     const supabase = createClient()
@@ -86,12 +87,20 @@ export default function Header() {
                   <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   <span className="sr-only">Toggle theme</span>
                 </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/signin">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
+                {isLocal ? (
+                  <>
+                    <Button variant="ghost" asChild>
+                      <Link href="/signin">Sign In</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link href="/signup">Sign Up</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <Button asChild>
+                    <Link href="/signup">Join Waitlist</Link>
+                  </Button>
+                )}
               </div>
             ) : (
               // Signed in
