@@ -3,14 +3,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { Database } from "@/lib/supabase/database.types"
+import { ThreadSection } from "@/components/threads/editor/types"
 
-type ThreadSection = {
-  type: "markdown" | "commit-links"
-  content: string
-  role?: "intro" | "body" | "conclusion"
-}
-
-type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas" | "published_at"> & {
+export type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas" | "published_at"> & {
   sections: ThreadSection[]
 }
 

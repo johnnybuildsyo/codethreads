@@ -142,25 +142,44 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
     setIsSubmitting(true)
 
     try {
-      const cleanedSections = sections.map((section) => {
-        if (section.type === "markdown") {
-          return {
-            id: section.id,
-            type: section.type,
-            content: section.content || "", // Ensure content is never null
-            role: section.role,
-          }
+      const cleanedSections = sections.map((section): ThreadSection => {
+        switch (section.type) {
+          case "markdown":
+            return {
+              id: section.id,
+              type: "markdown",
+              content: section.content || "",
+              role: section.role,
+            }
+          case "commit-links":
+            return {
+              id: section.id,
+              type: "commit-links",
+              content: section.content || "",
+              commits: section.commits || [],
+            }
+          case "code":
+            return {
+              id: section.id,
+              type: "code",
+              content: section.content || "",
+              filename: section.filename,
+            }
+          case "diff":
+            return {
+              id: section.id,
+              type: "diff",
+              content: section.content || "",
+              file: section.file,
+            }
+          case "image":
+            return {
+              id: section.id,
+              type: "image",
+              content: section.content || "",
+              imageUrl: section.imageUrl,
+            }
         }
-
-        // For non-markdown sections
-        const cleaned = {
-          id: section.id,
-          type: section.type,
-          content: section.content,
-          filename: section.file?.filename,
-          commits: section.commits,
-        }
-        return cleaned
       })
 
       const threadData = {
@@ -263,21 +282,43 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
 
       setSaveStatus("saving")
       try {
-        const cleanedSections = sections.map((section) => {
-          if (section.type === "markdown") {
-            return {
-              id: section.id,
-              type: section.type,
-              content: section.content || "",
-              role: section.role,
-            }
-          }
-          return {
-            id: section.id,
-            type: section.type,
-            content: section.content,
-            filename: section.file?.filename,
-            commits: section.commits,
+        const cleanedSections = sections.map((section): ThreadSection => {
+          switch (section.type) {
+            case "markdown":
+              return {
+                id: section.id,
+                type: "markdown",
+                content: section.content || "",
+                role: section.role,
+              }
+            case "commit-links":
+              return {
+                id: section.id,
+                type: "commit-links",
+                content: section.content || "",
+                commits: section.commits || [],
+              }
+            case "code":
+              return {
+                id: section.id,
+                type: "code",
+                content: section.content || "",
+                filename: section.filename,
+              }
+            case "diff":
+              return {
+                id: section.id,
+                type: "diff",
+                content: section.content || "",
+                file: section.file,
+              }
+            case "image":
+              return {
+                id: section.id,
+                type: "image",
+                content: section.content || "",
+                imageUrl: section.imageUrl,
+              }
           }
         })
 
@@ -577,6 +618,7 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
                   newSections.splice(index + 1 + i, 0, {
                     id: crypto.randomUUID(),
                     type: selection.type,
+                    content: "",
                     file: selection.file,
                   })
                 }

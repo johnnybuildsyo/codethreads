@@ -2,50 +2,11 @@ import ReactMarkdown from "react-markdown"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { getLanguageFromFilename } from "@/lib/utils"
-import { CommitLink } from "./commit-link"
+import { CommitLink as CommitLinkComponent } from "./commit-link"
 import { CommitDiff } from "./editor/commit-diff"
-import { FileChange } from "./editor/types"
+import { FileChange, ThreadSection, CommitLink } from "./editor/types"
 
-type CommitLink = {
-  filename: string
-  sha: string
-}
-
-type BaseSection = {
-  id: string
-  type: string
-  content?: string
-}
-
-type MarkdownSection = BaseSection & {
-  type: "markdown"
-  content: string
-}
-
-type CodeSection = BaseSection & {
-  type: "code"
-  filename: string
-  content: string
-}
-
-type DiffSection = BaseSection & {
-  type: "diff"
-  file: FileChange
-}
-
-type ImageSection = BaseSection & {
-  type: "image"
-  imageUrl: string
-}
-
-type CommitLinksSection = BaseSection & {
-  type: "commit-links"
-  commits: CommitLink[]
-}
-
-type ThreadSection = MarkdownSection | CodeSection | DiffSection | ImageSection | CommitLinksSection
-
-interface ThreadContentProps {
+type ThreadContentProps = {
   title: string
   sections: ThreadSection[]
   theme?: string
@@ -77,7 +38,7 @@ export function ThreadContent({ title, sections, theme, fullName, showDate, crea
                 <ReactMarkdown>{section.content || ""}</ReactMarkdown>
               </div>
             )}
-            {section.type === "code" && section.content && (
+            {section.type === "code" && section.content && section.filename && (
               <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
                 <div className="text-xs text-muted-foreground p-4 pb-0">{section.filename}</div>
                 <div className="overflow-auto">
@@ -93,11 +54,11 @@ export function ThreadContent({ title, sections, theme, fullName, showDate, crea
                 <img src={section.imageUrl} alt="" className="rounded-lg" />
               </div>
             )}
-            {section.type === "commit-links" && section.commits && (
+            {section.type === "commit-links" && section.commits && fullName && (
               <div className="not-prose flex flex-col gap-1">
                 {section.commits.map((link) => (
                   <div key={link.filename}>
-                    <CommitLink filename={link.filename} sha={link.sha} fullName={fullName} />
+                    <CommitLinkComponent filename={link.filename} sha={link.sha} fullName={fullName} />
                   </div>
                 ))}
               </div>
