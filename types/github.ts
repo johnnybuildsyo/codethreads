@@ -6,6 +6,7 @@ export interface GithubRepo {
   forks: number
   language: string | null
   updated_at: string
+  homepage: string | null
 }
 
 export interface Project {
@@ -14,6 +15,9 @@ export interface Project {
   name: string
   display_name: string
   description: string | null
+  homepage: string | null
+  screenshot_url: string | null
+  logo_url: string | null
   owner_id: string
   created_at: string
   updated_at: string

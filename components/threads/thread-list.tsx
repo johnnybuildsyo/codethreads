@@ -14,7 +14,6 @@ export function ThreadList({ threads, username, projectId, currentUser }: Thread
     return (
       <div className="text-center py-8 text-muted-foreground">
         <p>No threads yet</p>
-        <p className="text-sm">Create a thread to document your code changes</p>
       </div>
     )
   }

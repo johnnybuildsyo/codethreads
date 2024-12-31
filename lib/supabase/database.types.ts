@@ -134,10 +134,13 @@ export type Database = {
           display_name: string
           full_name: string
           github_id: number
+          homepage: string | null
           id: string
+          logo_url: string | null
           name: string
           owner_id: string
           profile_id: string
+          screenshot_url: string | null
           updated_at: string
         }
         Insert: {
@@ -146,10 +149,13 @@ export type Database = {
           display_name: string
           full_name: string
           github_id: number
+          homepage?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           owner_id: string
           profile_id: string
+          screenshot_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -158,10 +164,13 @@ export type Database = {
           display_name?: string
           full_name?: string
           github_id?: number
+          homepage?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           owner_id?: string
           profile_id?: string
+          screenshot_url?: string | null
           updated_at?: string
         }
         Relationships: [

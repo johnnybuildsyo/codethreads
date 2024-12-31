@@ -18,6 +18,7 @@ interface GitHubApiResponse {
   forks_count: number
   language: string | null
   updated_at: string
+  homepage: string | null
 }
 
 export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
@@ -59,6 +60,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
           forks: repo.forks_count,
           language: repo.language,
           updated_at: repo.updated_at,
+          homepage: repo.homepage,
         }))
 
         setRepos(mappedRepos)
@@ -100,6 +102,7 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
           display_name: selectedRepo.name.replace(/-/g, " ").replace(/_/g, " "),
           full_name: `${session.user.user_metadata.user_name}/${selectedRepo.name}`,
           description: selectedRepo.description,
+          homepage: selectedRepo.homepage,
           owner_id: session.user.id,
           profile_id: profile.id,
         })

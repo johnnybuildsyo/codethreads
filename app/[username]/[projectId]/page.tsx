@@ -1,11 +1,10 @@
 import Header from "@/components/layout/header"
-import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink } from "lucide-react"
+import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink, LinkIcon } from "lucide-react"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
-import { ProjectNameEditor } from "@/components/projects/project-name-editor"
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 import { ThreadList } from "@/components/threads/thread-list"
 import { ThreadSection } from "@/components/threads/editor/types"
@@ -95,7 +94,15 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
-          <ProjectNameEditor projectId={project.id} initialName={project.display_name || project.name} className="mb-2" />
+          <h1 className="text-3xl font-bold mb-1">{project.display_name || project.name}</h1>
+          {project.homepage && (
+            <div>
+              <a href={project.homepage} target="_blank" className="inline-flex items-center space-x-2 text-blue-500 font-medium underline mb-8">
+                <LinkIcon className="h-3 w-3" />
+                <span>{project.homepage}</span>
+              </a>
+            </div>
+          )}
           <div className="flex items-center space-x-4 mb-6">
             <Link href={`/${username}`} className="group inline-flex items-center space-x-2 font-mono text-xs border px-2 py-1 rounded-md hover:bg-foreground/5 transition-colors">
               <User className="h-3 w-3" />
