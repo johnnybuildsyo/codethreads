@@ -1,5 +1,6 @@
 import { FileChange } from "@/components/threads/editor/types"
 import { User } from "@supabase/supabase-js"
+import { ThreadSection } from "@/components/threads/editor/types"
 
 export interface ThreadPost {
   id: number
@@ -15,7 +16,7 @@ export interface ThreadPost {
 export interface Thread {
   id: string
   title: string
-  sections: any
+  sections: ThreadSection[]
   commit_shas: string[]
   published_at: string | null
   created_at: string

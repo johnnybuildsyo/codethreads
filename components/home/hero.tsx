@@ -79,9 +79,9 @@ export default function Hero() {
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Check className="h-5 w-5 text-green-500" />
-                <span>You're on the waitlist!</span>
+                <span>You’re on the waitlist!</span>
               </div>
-              <p className="text-sm text-muted-foreground">We'll notify you when CodeThreads is ready.</p>
+              <p className="text-sm text-muted-foreground">We’ll notify you when CodeThreads is ready.</p>
             </div>
           ) : showForm ? (
             <form action={handleSubmit} className="flex flex-col items-center justify-center gap-4 max-w-lg mx-auto border rounded-lg p-8">

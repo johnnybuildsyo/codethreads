@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { ChevronsRight, SquarePen } from "lucide-react"
+import { ThreadSection } from "./editor/types"
 
 export function ThreadCard({ thread, username, projectId, featured = false, currentUser }: ThreadCardProps) {
   const threadUrl = `/${username}/${projectId}/thread/${thread.id}`
   const editUrl = `${threadUrl}/edit`
-  const introSection = thread.sections.find((section: any) => section.type === "markdown" && section.role === "intro")
+  const introSection = thread.sections.find((section: ThreadSection) => section.type === "markdown" && section.role === "intro")
   const introContent = introSection?.content || ""
   const previewContent = introContent.split("\n")[0] || "No preview available"
   const isAuthor = currentUser?.id === thread.user_id
