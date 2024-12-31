@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { User } from "@supabase/supabase-js"
 import { signOut } from "@/lib/actions/auth"
+import { WaitlistDialog } from "../home/waitlist-dialog"
 
 interface Profile {
   username: string
@@ -22,6 +23,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const isLocal = process.env.NEXT_PUBLIC_VERCEL_ENV === undefined
 
   useEffect(() => {
@@ -80,7 +82,6 @@ export default function Header() {
         {!isLoading && (
           <>
             {!user ? (
-              // Not signed in
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="mr-2">
                   <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -97,9 +98,7 @@ export default function Header() {
                     </Button>
                   </>
                 ) : (
-                  <Button asChild>
-                    <Link href="/signup">Join Waitlist</Link>
-                  </Button>
+                  <Button onClick={() => setDialogOpen(true)}>Join Waitlist</Button>
                 )}
               </div>
             ) : (
@@ -154,6 +153,7 @@ export default function Header() {
           </>
         )}
       </div>
+      <WaitlistDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </header>
   )
 }
