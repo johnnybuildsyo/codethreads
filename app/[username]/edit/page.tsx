@@ -1,8 +1,8 @@
 import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import { EditProfileForm, Link } from "@/components/users/edit-profile-form"
-import { Database } from "@/lib/supabase/database.types"
+import { EditProfileForm } from "@/components/users/edit-profile-form"
+import type { ProfileLink } from "@/lib/types/user"
 
 interface EditProfilePageProps {
   params: Promise<{
@@ -27,9 +27,8 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
     .single()
     .then(({ data }) => {
       if (!data) return null
-      // Handle links which is stored as JSONB with default '[]'
-      const links = data.links
-        ? ((data.links as any[]) || []).map((link) => ({
+      const links: ProfileLink[] = data.links
+        ? (data.links as ProfileLink[]).map((link) => ({
             title: link.title || "",
             url: link.url || "",
           }))

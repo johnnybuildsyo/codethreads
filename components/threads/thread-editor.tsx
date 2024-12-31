@@ -6,8 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useRouter, useParams } from "next/navigation"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Zap, Save } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -48,8 +47,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   const [title, setTitle] = useState(thread?.title || "")
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
-  const router = useRouter()
-  const params = useParams()
   const [sections, setSections] = useState<ThreadSection[]>(
     thread?.sections || [
       {

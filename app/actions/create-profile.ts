@@ -23,7 +23,7 @@ export async function createProfile(username: string) {
   }
 
   // Check against reserved usernames
-  if (RESERVED_USERNAMES.includes(username as any)) {
+  if (RESERVED_USERNAMES.includes(username)) {
     return { error: "This username is reserved" }
   }
 

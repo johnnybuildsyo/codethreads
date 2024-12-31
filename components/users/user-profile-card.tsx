@@ -66,8 +66,8 @@ export function UserProfileCard({ name, username, avatar, bio, github, twitter, 
 
           {links.length > 0 && (
             <div className="flex flex-wrap gap-2 py-2">
-              {links.map((link, i) => (
-                <a href={link.url} target="_blank" className="flex items-center gap-1 text-sm text-blue-500 hover:underline">
+              {links.map((link) => (
+                <a key={link.url} href={link.url} target="_blank" className="flex items-center gap-1 text-sm text-blue-500 hover:underline">
                   <LinkIcon className="mr-2 h-4 w-4" />
                   {link.title}
                 </a>
