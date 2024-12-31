@@ -1,16 +1,16 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
-import { ThreadSection } from "./types"
+import { SessionBlock } from "@/lib/types/session"
 
 interface SortableItemProps {
-  section: ThreadSection
+  block: SessionBlock
   children: React.ReactNode
 }
 
-export function SortableItem({ section, children }: SortableItemProps) {
+export function SortableItem({ block, children }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: section.id,
+    id: block.id,
   })
 
   const style = {

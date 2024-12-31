@@ -1,7 +1,7 @@
 import { memo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { CheckSquare, Square, ChevronDown, ChevronRight } from "lucide-react"
-import { FileChange } from "./types"
+import { FileChange } from "@/lib/types/session"
 
 interface FileSelectorProps {
   files: FileChange[]

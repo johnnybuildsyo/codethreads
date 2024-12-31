@@ -3,13 +3,13 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { Database } from "@/lib/supabase/database.types"
-import { ThreadSection } from "@/components/threads/editor/types"
+import { SessionBlock } from "@/lib/types/session"
 
-export type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas"> & {
-  sections: ThreadSection[]
+export type SessionData = Pick<Database["public"]["Tables"]["sessions"]["Insert"], "title" | "commit_shas"> & {
+  blocks: SessionBlock[]
 }
 
-export async function upsertThread(projectId: string, threadData: ThreadData, threadId?: string) {
+export async function upsertSession(projectId: string, sessionData: SessionData, sessionId?: string) {
   const supabase = await createClient()
 
   // Get current session
@@ -30,42 +30,42 @@ export async function upsertThread(projectId: string, threadData: ThreadData, th
   }
 
   if (project.owner_id !== session.user.id) {
-    throw new Error("Not authorized to modify threads in this project")
+    throw new Error("Not authorized to modify sessions in this project")
   }
 
-  // Prepare thread data
+  // Prepare session data
   const data = {
     project_id: projectId,
     user_id: session.user.id,
-    ...threadData,
-    sections: threadData.sections as unknown as Database["public"]["Tables"]["threads"]["Insert"]["sections"]
+    ...sessionData,
+    blocks: sessionData.blocks as unknown as Database["public"]["Tables"]["sessions"]["Insert"]["blocks"]
   }
 
   try {
     let result
-    if (threadId) {
-      // Update existing thread
-      // First verify thread ownership
-      const { data: existingThread } = await supabase
-        .from("threads")
+    if (sessionId) {
+      // Update existing session
+      // First verify session ownership
+      const { data: existingSession } = await supabase
+        .from("sessions")
         .select("user_id")
-        .eq("id", threadId)
+        .eq("id", sessionId)
         .single()
 
-      if (!existingThread || existingThread.user_id !== session.user.id) {
-        throw new Error("Not authorized to edit this thread")
+      if (!existingSession || existingSession.user_id !== session.user.id) {
+        throw new Error("Not authorized to edit this session")
       }
 
       result = await supabase
-        .from("threads")
+        .from("sessions")
         .update(data)
-        .eq("id", threadId)
+        .eq("id", sessionId)
         .select()
         .single()
     } else {
-      // Create new thread
+      // Create new session
       result = await supabase
-        .from("threads")
+        .from("sessions")
         .insert(data)
         .select()
         .single()
@@ -87,7 +87,7 @@ export async function upsertThread(projectId: string, threadData: ThreadData, th
     return { success: true, path }
 
   } catch (error) {
-    console.error("Failed to save thread:", error)
+    console.error("Failed to save session:", error)
     throw error
   }
 } 

@@ -43,9 +43,9 @@ export type Database = {
           id: string
           message: string
           project_id: string
+          session: string | null
           sha: string
           status: string
-          thread_id: string | null
         }
         Insert: {
           author_email: string
@@ -55,9 +55,9 @@ export type Database = {
           id?: string
           message: string
           project_id: string
+          session?: string | null
           sha: string
           status?: string
-          thread_id?: string | null
         }
         Update: {
           author_email?: string
@@ -67,9 +67,9 @@ export type Database = {
           id?: string
           message?: string
           project_id?: string
+          session?: string | null
           sha?: string
           status?: string
-          thread_id?: string | null
         }
         Relationships: [
           {
@@ -80,10 +80,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "commits_thread_id_fkey"
-            columns: ["thread_id"]
+            foreignKeyName: "commits_session_fkey"
+            columns: ["session"]
             isOneToOne: false
-            referencedRelation: "threads"
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -183,40 +183,40 @@ export type Database = {
           },
         ]
       }
-      threads: {
+      sessions: {
         Row: {
+          blocks: Json
           commit_shas: string[]
           created_at: string
           id: string
           project_id: string
-          sections: Json
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          blocks: Json
           commit_shas?: string[]
           created_at?: string
           id?: string
           project_id: string
-          sections: Json
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          blocks?: Json
           commit_shas?: string[]
           created_at?: string
           id?: string
           project_id?: string
-          sections?: Json
           title?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "threads_project_id_fkey"
+            foreignKeyName: "sessions_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"

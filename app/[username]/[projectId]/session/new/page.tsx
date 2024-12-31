@@ -1,19 +1,20 @@
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 import Header from "@/components/layout/header"
-import { ThreadEditor } from "@/components/threads/thread-editor"
+import { SessionEditor } from "@/components/sessions/session-editor"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import { ThreadSection } from "@/components/threads/editor/types"
 
-interface EditThreadPageProps {
+interface NewSessionPageProps {
   params: Promise<{
     username: string
     projectId: string
-    threadId: string
+  }>
+  searchParams: Promise<{
+    commit: string
   }>
 }
 
-export default async function EditThreadPage({ params }: EditThreadPageProps) {
+export default async function NewSessionPage({ params, searchParams }: NewSessionPageProps) {
   const supabase = await createClient()
   const {
     data: { session },
@@ -23,24 +24,8 @@ export default async function EditThreadPage({ params }: EditThreadPageProps) {
     redirect("/signin")
   }
 
-  const { username, projectId, threadId } = await params
-
-  // Get thread data
-  const thread = await supabase
-    .from("threads")
-    .select("*, commit_shas")
-    .eq("id", threadId)
-    .single()
-    .then(({ data }) => (data ? { ...data, sections: (JSON.parse(data.sections as string) as ThreadSection[]) || [] } : null))
-
-  if (!thread) {
-    notFound()
-  }
-
-  // Check if user is the author
-  if (thread.user_id !== session.user.id) {
-    redirect(`/${username}/${projectId}/thread/${threadId}`)
-  }
+  const { username, projectId } = await params
+  const { commit: commitSha } = await searchParams
 
   // Get project details
   const { data: project } = await supabase.from("projects").select("*, profiles!inner(username)").eq("name", projectId).eq("profiles.username", username).single()
@@ -48,7 +33,6 @@ export default async function EditThreadPage({ params }: EditThreadPageProps) {
   if (!project) notFound()
 
   // Fetch commit from GitHub
-  const commitSha = thread.commit_shas[0]
   const response = await fetch(`https://api.github.com/repos/${project.full_name}/commits/${commitSha}`, {
     headers: {
       Authorization: `Bearer ${session.provider_token}`,
@@ -61,7 +45,7 @@ export default async function EditThreadPage({ params }: EditThreadPageProps) {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <h3 className="text-2xl font-bold mb-8">Edit CodeThread</h3>
+          <h3 className="text-2xl font-bold mb-8">New Session</h3>
           <GitHubAuthGate />
         </main>
       </div>
@@ -80,7 +64,7 @@ export default async function EditThreadPage({ params }: EditThreadPageProps) {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-4xl 2xl:max-w-none w-full">
-        <ThreadEditor projectId={project.id} commit={commit} fullName={project.full_name} thread={thread} />
+        <SessionEditor projectId={project.id} commit={commit} fullName={project.full_name} />
       </main>
     </div>
   )

@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { FileChange } from "./types"
+import { FileChange } from "@/lib/types/session"
 import { Button } from "@/components/ui/button"
 import { shouldExcludeFile } from "@/lib/utils"
 import { useState } from "react"
@@ -22,7 +22,8 @@ interface DiffSelectorProps {
 export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [codeType, setCodeType] = useState<"diff" | "code" | "commit-links">("diff")
-  const filteredFiles = files.filter((f) => !shouldExcludeFile(f.filename))
+  const fileArray = Array.isArray(files) ? files : []
+  const filteredFiles = fileArray.filter((f) => !shouldExcludeFile(f.filename))
 
   const handleToggle = (filename: string) => {
     setSelectedFiles((prev) => {

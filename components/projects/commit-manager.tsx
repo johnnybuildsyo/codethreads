@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -124,7 +124,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
-      router.push(`${window.location.pathname}/thread/new?commit=${commit.sha}`)
+      router.push(`${window.location.pathname}/session/new?commit=${commit.sha}`)
     }
   }
 
@@ -160,12 +160,9 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
             <p className="font-medium">{commit.commit.message.split("\n")[0]}</p>
             <p className="text-sm text-muted-foreground mt-1">{new Date(commit.commit.author.date).toLocaleDateString()}</p>
             <div className="mt-4 flex items-center space-x-2">
-              <Button asChild>
-                <Link href={`${window.location.pathname}/thread/new?commit=${commit.sha}`}>
-                  <Plus className="h-4 w-4" />
-                  Start Thread
-                </Link>
-              </Button>
+              <Link href={`${window.location.pathname}/session/new?commit=${commit.sha}`}>
+                <Button>Start Session</Button>
+              </Link>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
                 Ignore
               </Button>

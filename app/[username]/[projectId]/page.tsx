@@ -6,9 +6,8 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
 import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
-import { ThreadList } from "@/components/threads/thread-list"
-import { ThreadSection } from "@/components/threads/editor/types"
-import { Thread } from "@/types/thread"
+import { SessionList } from "@/components/sessions/session-list"
+import { SessionBlock, Session } from "@/lib/types/session"
 import { Button } from "@/components/ui/button"
 
 interface ProjectPageProps {
@@ -82,13 +81,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   const isOwner = session?.user?.id === project.owner_id
 
-  // Get threads for this project
-  const threads: Thread[] = await supabase
-    .from("threads")
+  // Get sessions for this project
+  const sessions = (await supabase
+    .from("sessions")
     .select("*, commit_shas")
     .eq("project_id", project.id)
     .order("created_at", { ascending: false })
-    .then(({ data }) => data?.map((thread) => ({ ...thread, sections: (JSON.parse(thread.sections as string) as ThreadSection[]) || [] })) || [])
+    .then(({ data }) => data?.map((session) => ({ ...session, blocks: (JSON.parse(session.blocks as string) as SessionBlock[]) || [] })) || [])) as Session[]
 
   return (
     <div className="min-h-screen bg-background">
@@ -196,7 +195,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </div>
           <p className="text-muted-foreground">{project.description}</p>
           <div className="md:col-span-3 mt-8">
-            <ThreadList threads={threads?.map((t) => ({ ...t, sections: t.sections as unknown as ThreadSection[] })) || []} username={username} projectId={projectId} currentUser={session?.user} />
+            <SessionList sessions={sessions?.map((t) => ({ ...t, blocks: t.blocks as unknown as SessionBlock[] })) || []} username={username} projectId={projectId} currentUser={session?.user} />
           </div>
           <div className="grid gap-8 md:grid-cols-3 mt-8">
             {isOwner && (

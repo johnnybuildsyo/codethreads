@@ -20,19 +20,22 @@ export default async function UserPage({ params }: UserPageProps) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Get profile and projects from database
-  const { data: profile, error } = await supabase
+  // Get profile and projects with session counts
+  const { data: profile } = await supabase
     .from("profiles")
     .select(
       `
       *,
-      projects (*)
+      projects (
+        *,
+        sessions:sessions(count)
+      )
     `
     )
     .eq("username", username)
     .single()
 
-  if (error || !profile) {
+  if (!profile) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -59,6 +62,13 @@ export default async function UserPage({ params }: UserPageProps) {
     )
   }
 
+  // Transform projects to include session count
+  const projectsWithCounts =
+    profile.projects?.map((project) => ({
+      ...project,
+      sessionCount: project.sessions?.[0]?.count ?? 0,
+    })) || []
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -81,7 +91,7 @@ export default async function UserPage({ params }: UserPageProps) {
                 : []
             }
           />
-          <ProjectList projects={Array.isArray(profile.projects) ? profile.projects : []} username={profile.username} isCurrentUser={isCurrentUser} />
+          <ProjectList projects={projectsWithCounts} username={profile.username} isCurrentUser={isCurrentUser} />
         </div>
       </main>
     </div>

@@ -1,7 +1,7 @@
 import { CheckCircle } from "lucide-react"
 
 const steps = [
-  "Create a new thread for your coding project",
+  "Create a new session for your coding project",
   "Share updates as you code, including snippets and explanations",
   "Receive feedback and suggestions from the community",
   "Iterate on your code based on the input",

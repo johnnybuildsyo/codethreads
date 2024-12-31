@@ -4,11 +4,11 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 import { getLanguageFromFilename } from "@/lib/utils"
 import { CommitLink as CommitLinkComponent } from "./commit-link"
 import { CommitDiff } from "./editor/commit-diff"
-import { ThreadSection } from "./editor/types"
+import { SessionBlock } from "@/lib/types/session"
 
-type ThreadContentProps = {
+type SessionContentProps = {
   title: string
-  sections: ThreadSection[]
+  blocks: SessionBlock[]
   theme?: string
   fullName: string
   showDate?: boolean
@@ -16,7 +16,7 @@ type ThreadContentProps = {
   commit_shas?: string[]
 }
 
-export function ThreadContent({ title, sections, theme, fullName, showDate, created_at, commit_shas }: ThreadContentProps) {
+export function SessionContent({ title, blocks, theme, fullName, showDate, created_at, commit_shas }: SessionContentProps) {
   return (
     <div className="space-y-8">
       <div>
@@ -31,32 +31,32 @@ export function ThreadContent({ title, sections, theme, fullName, showDate, crea
       </div>
 
       <div className="space-y-8">
-        {sections.map((section) => (
-          <div key={section.id}>
-            {section.type === "markdown" && (
+        {blocks.map((block) => (
+          <div key={block.id}>
+            {block.type === "markdown" && (
               <div className="prose dark:prose-invert">
-                <ReactMarkdown>{section.content || ""}</ReactMarkdown>
+                <ReactMarkdown>{block.content || ""}</ReactMarkdown>
               </div>
             )}
-            {section.type === "code" && section.content && section.filename && (
+            {block.type === "code" && block.content && block.filename && (
               <div className="relative font-mono text-sm bg-muted rounded-lg mb-4">
-                <div className="text-xs text-muted-foreground p-4 pb-0">{section.filename}</div>
+                <div className="text-xs text-muted-foreground p-4 pb-0">{block.filename}</div>
                 <div className="overflow-auto">
-                  <SyntaxHighlighter language={getLanguageFromFilename(section.filename)} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
-                    {section.content}
+                  <SyntaxHighlighter language={getLanguageFromFilename(block.filename)} style={theme === "dark" ? oneDark : oneLight} customStyle={{ margin: 0, background: "transparent" }}>
+                    {block.content}
                   </SyntaxHighlighter>
                 </div>
               </div>
             )}
-            {section.type === "diff" && section.file && <CommitDiff files={[section.file]} defaultRenderDiff={true} theme={theme} />}
-            {section.type === "image" && section.imageUrl && (
+            {block.type === "diff" && block.file && <CommitDiff files={[block.file]} defaultRenderDiff={true} theme={theme} />}
+            {block.type === "image" && block.imageUrl && (
               <div className="my-4">
-                <img src={section.imageUrl} alt="" className="rounded-lg" />
+                <img src={block.imageUrl} alt="" className="rounded-lg" />
               </div>
             )}
-            {section.type === "commit-links" && section.commits && fullName && (
+            {block.type === "commit-links" && block.commits && fullName && (
               <div className="not-prose flex flex-col gap-1">
-                {section.commits.map((link) => (
+                {block.commits.map((link) => (
                   <div key={link.filename}>
                     <CommitLinkComponent filename={link.filename} sha={link.sha} fullName={fullName} />
                   </div>

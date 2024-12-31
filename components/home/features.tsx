@@ -4,8 +4,8 @@ import { Code, Users, Zap } from "lucide-react"
 const features = [
   {
     icon: <Code className="h-8 w-8 text-primary" />,
-    title: "Live Coding Threads",
-    description: "Share your coding process step-by-step in real-time threads.",
+    title: "Live Coding Sessions",
+    description: "Share your coding process step-by-step in real-time post sessions.",
   },
   {
     icon: <Users className="h-8 w-8 text-primary" />,

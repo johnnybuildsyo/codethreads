@@ -31,7 +31,12 @@ export const RESERVED_USERNAMES = [
   'dashboard',
   'hackathon',
   'projects',
-  'threads',
+  'sessions',
+  'session',
+  'cookbook',
+  'cookbooks',
+  'challenge',
+  'challenges',
   'trending',
   
   // Meta
@@ -53,4 +58,5 @@ export const RESERVED_USERNAMES = [
   'cookoffs',
   'cook-off',
   'cook-offs',
+  'live',
 ] 

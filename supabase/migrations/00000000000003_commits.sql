@@ -6,7 +6,7 @@ create table public.commits (
   author_name text not null,
   author_email text not null,
   authored_at timestamp with time zone not null,
-  thread_id uuid references threads(id),
+  session uuid references sessions(id),
   status text check (status in ('pending', 'threaded', 'ignored')) not null default 'pending',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(project_id, sha)

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { FileChange } from "./types"
+import { FileChange } from "@/lib/types/session"
 import { Button } from "@/components/ui/button"
 import { Check, Github } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -16,6 +16,7 @@ interface CommitLinkSelectorProps {
 export function CommitLinkSelector({ open, onClose, files, existingLinks, onSelect }: CommitLinkSelectorProps) {
   const [selectedFiles, setSelectedFiles] = React.useState<FileChange[]>([])
   const existingFilenames = new Set(existingLinks.map((link) => link.filename))
+  const fileArray = Array.isArray(files) ? files : []
 
   const handleSelect = (file: FileChange) => {
     if (selectedFiles.some((f) => f.filename === file.filename)) {
@@ -39,7 +40,7 @@ export function CommitLinkSelector({ open, onClose, files, existingLinks, onSele
         </DialogHeader>
         <div className="flex-1 overflow-auto py-4">
           <div className="space-y-2">
-            {files.map((file) => {
+            {fileArray.map((file) => {
               const isSelected = selectedFiles.some((f) => f.filename === file.filename)
               const isExisting = existingFilenames.has(file.filename)
               return (

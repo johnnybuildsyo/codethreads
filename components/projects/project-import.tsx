@@ -24,7 +24,9 @@ export function ProjectImport({ repos, onProjectSelect, isCreating }: ProjectImp
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Import Your First Project</CardTitle>
-          <CardDescription className="text-lg mt-2">{selectedRepo ? "Create your first Code Thread" : "Select a GitHub repository to start your first Code Thread"}</CardDescription>
+          <CardDescription className="text-lg mt-2">
+            {selectedRepo ? "Create your first  CodeCook.live session" : "Select a GitHub repository to start your first CodeCook.live session"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">

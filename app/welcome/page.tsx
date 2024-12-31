@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import LogoIcon from "@/components/graphics/logo-icon"
 import { WelcomeForm } from "@/components/auth/welcome-form"
 
@@ -10,7 +11,9 @@ export default function WelcomePage() {
         </div>
         <h1 className="text-3xl font-bold mb-16 text-center">Welcome to CodeCook.live!</h1>
         <div className="space-y-6">
-          <WelcomeForm />
+          <Suspense>
+            <WelcomeForm />
+          </Suspense>
         </div>
       </main>
     </div>

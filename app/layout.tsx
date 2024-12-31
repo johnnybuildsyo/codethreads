@@ -1,5 +1,5 @@
 import { Rethink_Sans } from "next/font/google"
-import { ThemeProvider } from "@/components/threads/theme-provider"
+import { ThemeProvider } from "@/components/sessions/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -11,7 +11,7 @@ const displayFont = Rethink_Sans({
 
 export const metadata = {
   title: "CodeCook.live",
-  description: "Live coding in post thread format",
+  description: "The publishing platform for live coding that turns your commits into live code cooking sessions",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

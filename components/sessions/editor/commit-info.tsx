@@ -1,4 +1,4 @@
-import { FileChange } from "./types"
+import { FileChange } from "@/lib/types/session"
 import { useState } from "react"
 import { LoadingAnimation } from "@/components/ui/loading-animation"
 
@@ -15,8 +15,9 @@ interface CommitInfoProps {
 
 export function CommitInfo({ commit, files, fullName }: CommitInfoProps) {
   const [showAll, setShowAll] = useState(false)
-  const displayFiles = showAll ? files : files.slice(0, 6)
-  const hasMore = files.length > 6
+  const fileArray = Array.isArray(files) ? files : []
+  const displayFiles = showAll ? fileArray : fileArray.slice(0, 6)
+  const hasMore = fileArray.length > 6
 
   return (
     <div className="p-4 bg-muted/50 rounded-md">
@@ -27,7 +28,7 @@ export function CommitInfo({ commit, files, fullName }: CommitInfoProps) {
           </a>
           <div>{commit.message}</div>
         </div>
-        {files.length > 0 ? <div className="text-xs font-mono">{files.length} files changed</div> : <LoadingAnimation className="text-sm font-mono" />}
+        {fileArray.length > 0 ? <div className="text-xs font-mono">{fileArray.length} files changed</div> : <LoadingAnimation className="text-sm font-mono" />}
       </div>
       <div className="text-sm">
         <div className="space-y-1">
@@ -42,7 +43,7 @@ export function CommitInfo({ commit, files, fullName }: CommitInfoProps) {
             ))}
             {hasMore && (
               <button className="px-1 py-1 h-auto text-foreground/70 hover:text-foreground" onClick={() => setShowAll(!showAll)}>
-                {showAll ? <>-show less</> : <>+show {files.length - 6} more</>}
+                {showAll ? <>-show less</> : <>+show {fileArray.length - 6} more</>}
               </button>
             )}
           </div>

@@ -6,69 +6,34 @@ import { useTheme } from "next-themes"
 import { Moon, Sun, ChevronDown } from "lucide-react"
 import LogoIcon from "../graphics/logo-icon"
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { getAuthUser } from "@/lib/actions/auth"
+import type { User } from "@supabase/supabase-js"
+import type { Profile } from "@/lib/types/user"
+import { WaitlistDialog } from "../home/waitlist-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { User } from "@supabase/supabase-js"
 import { signOut } from "@/lib/actions/auth"
-import { WaitlistDialog } from "../home/waitlist-dialog"
-
-interface Profile {
-  username: string
-  id: string
-}
-
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const isLocal = process.env.NEXT_PUBLIC_VERCEL_ENV === undefined
 
   useEffect(() => {
-    const supabase = createClient()
-
     async function initAuth() {
-      // Get initial session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
-
-      if (currentUser) {
-        const { data: profile } = await supabase.from("profiles").select("username, id").eq("id", currentUser.id).single()
+      try {
+        const { user, profile } = await getAuthUser()
+        setUser(user)
         setProfile(profile)
-      }
-
-      setIsLoading(false)
-
-      // Set up auth state listener after getting initial session
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        const currentUser = session?.user ?? null
-        setUser(currentUser)
-
-        if (currentUser) {
-          const { data: profile } = await supabase.from("profiles").select("username, id").eq("id", currentUser.id).single()
-          setProfile(profile)
-        } else {
-          setProfile(null)
-        }
-
+      } catch (error) {
+        console.error("Auth error:", error)
+      } finally {
         setIsLoading(false)
-      })
-
-      return () => subscription.unsubscribe()
+      }
     }
 
-    // Initialize auth and store cleanup function
-    const cleanup = initAuth()
-    return () => {
-      cleanup.then((unsubscribe) => unsubscribe())
-    }
+    initAuth()
   }, [])
 
   return (
@@ -83,27 +48,22 @@ export default function Header() {
 
         {!isLoading && (
           <>
-            {!user ? (
+            {!user && (
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="mr-2">
                   <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                   <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   <span className="sr-only">Toggle theme</span>
                 </Button>
-                {isLocal ? (
-                  <>
-                    <Button variant="ghost" asChild>
-                      <Link href="/signin">Sign In</Link>
-                    </Button>
-                    <Button asChild>
-                      <Link href="/signup">Sign Up</Link>
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => setDialogOpen(true)}>Join Waitlist</Button>
-                )}
+                <Button variant="ghost" asChild>
+                  <Link href="/signin">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
               </div>
-            ) : (
+            )}
+            {user && (
               // Signed in
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
