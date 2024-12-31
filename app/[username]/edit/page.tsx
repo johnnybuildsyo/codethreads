@@ -1,7 +1,7 @@
 import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import { EditProfileForm } from "@/components/users/edit-profile-form"
+import { EditProfileForm, Link } from "@/components/users/edit-profile-form"
 
 interface EditProfilePageProps {
   params: Promise<{
@@ -19,7 +19,12 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
   } = await supabase.auth.getSession()
 
   // Get profile from database
-  const { data: profile } = await supabase.from("profiles").select("*").eq("username", username).single()
+  const profile = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", username)
+    .single()
+    .then(({ data }) => (data ? { ...data, links: JSON.parse(data.links as string) as Link[] } : null))
 
   if (!profile) {
     notFound()

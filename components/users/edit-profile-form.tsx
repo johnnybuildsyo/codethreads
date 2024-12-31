@@ -13,7 +13,7 @@ import Link from "next/link"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { Plus, X, GripVertical } from "lucide-react"
 
-interface Link {
+export interface Link {
   title: string
   url: string
 }
