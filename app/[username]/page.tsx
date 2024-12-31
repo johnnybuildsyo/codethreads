@@ -3,6 +3,7 @@ import { ProjectList } from "@/components/projects/project-list"
 import { ProjectImportContainer } from "@/components/projects/project-import-container"
 import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
+import type { Json } from "@/lib/supabase/database.types"
 
 interface UserPageProps {
   params: Promise<{
@@ -20,7 +21,7 @@ export default async function UserPage({ params }: UserPageProps) {
   } = await supabase.auth.getSession()
 
   // Get profile and projects from database
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select(
       `
@@ -31,7 +32,7 @@ export default async function UserPage({ params }: UserPageProps) {
     .eq("username", username)
     .single()
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -73,14 +74,14 @@ export default async function UserPage({ params }: UserPageProps) {
             isCurrentUser={isCurrentUser}
             links={
               profile.links
-                ? ((profile.links as any[]) || []).map((link) => ({
-                    title: link.title || "",
-                    url: link.url || "",
+                ? (profile.links as Json[]).map((link) => ({
+                    title: (link as any).title || "",
+                    url: (link as any).url || "",
                   }))
                 : []
             }
           />
-          <ProjectList projects={profile.projects || []} username={profile.username} isCurrentUser={isCurrentUser} />
+          <ProjectList projects={Array.isArray(profile.projects) ? profile.projects : []} username={profile.username} isCurrentUser={isCurrentUser} />
         </div>
       </main>
     </div>

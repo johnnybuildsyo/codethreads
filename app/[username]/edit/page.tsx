@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 import { EditProfileForm } from "@/components/users/edit-profile-form"
 import type { ProfileLink } from "@/lib/types/user"
-
+import type { Json } from "@/lib/supabase/database.types"
 interface EditProfilePageProps {
   params: Promise<{
     username: string
@@ -28,9 +28,9 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
     .then(({ data }) => {
       if (!data) return null
       const links: ProfileLink[] = data.links
-        ? (data.links as ProfileLink[]).map((link) => ({
-            title: link.title || "",
-            url: link.url || "",
+        ? (data.links as Json[]).map((link) => ({
+            title: (link as any).title || "",
+            url: (link as any).url || "",
           }))
         : []
       return {
