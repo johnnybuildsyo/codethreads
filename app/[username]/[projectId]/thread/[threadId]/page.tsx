@@ -5,6 +5,7 @@ import { ThreadView } from "@/components/threads/thread-view"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
+import { ThreadSection } from "@/components/threads/editor/types"
 
 interface ThreadPageProps {
   params: Promise<{
@@ -19,7 +20,12 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
   const supabase = await createClient()
 
   // Get thread data
-  const { data: thread } = await supabase.from("threads").select("*, commit_shas").eq("id", threadId).single()
+  const thread = await supabase
+    .from("threads")
+    .select("*, commit_shas")
+    .eq("id", threadId)
+    .single()
+    .then(({ data }) => (data ? { ...data, sections: (JSON.parse(data.sections as string) as ThreadSection[]) || [] } : null))
 
   if (!thread) {
     notFound()
@@ -31,6 +37,13 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
     supabase.from("threads").select("id").eq("project_id", thread.project_id).gt("created_at", thread.created_at).order("created_at", { ascending: true }).limit(1).single(),
   ])
 
+  // Get project details
+  const { data: project } = await supabase.from("projects").select("full_name").eq("name", projectId).single()
+
+  if (!project) {
+    notFound()
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -40,7 +53,7 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           Back to project
         </Link>
 
-        <ThreadView thread={thread} />
+        <ThreadView thread={thread} fullName={project.full_name} />
 
         <div className="flex justify-between mt-8">
           {prevThread ? (

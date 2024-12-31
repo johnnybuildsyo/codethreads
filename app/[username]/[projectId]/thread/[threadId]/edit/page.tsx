@@ -3,6 +3,7 @@ import Header from "@/components/layout/header"
 import { ThreadEditor } from "@/components/threads/thread-editor"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
+import { ThreadSection } from "@/components/threads/editor/types"
 
 interface EditThreadPageProps {
   params: Promise<{
@@ -25,7 +26,12 @@ export default async function EditThreadPage({ params }: EditThreadPageProps) {
   const { username, projectId, threadId } = await params
 
   // Get thread data
-  const { data: thread } = await supabase.from("threads").select("*").eq("id", threadId).single()
+  const thread = await supabase
+    .from("threads")
+    .select("*, commit_shas")
+    .eq("id", threadId)
+    .single()
+    .then(({ data }) => (data ? { ...data, sections: (JSON.parse(data.sections as string) as ThreadSection[]) || [] } : null))
 
   if (!thread) {
     notFound()
