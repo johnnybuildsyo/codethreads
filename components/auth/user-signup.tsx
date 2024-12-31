@@ -6,16 +6,24 @@ import { Github } from "lucide-react"
 import { signInWithGitHub } from "./actions"
 import { useState } from "react"
 import { LoadingAnimation } from "../ui/loading-animation"
+import LogoIcon from "../graphics/logo-icon"
 
 export function UserSignup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   return (
-    <Card>
+    <Card className="sm:p-8">
       <CardHeader className="text-center">
-        <CardTitle>Welcome to CodeThreads!</CardTitle>
-        <CardDescription>Document and share your coding journey</CardDescription>
+        <CardTitle className="flex flex-col gap-2 items-center justify-center">
+          <div className="flex items-center justify-center pb-4 scale-150">
+            <LogoIcon />
+          </div>
+          <h1 className="text-3xl font-extrabold text-center">
+            Join CodeCook<span className="text-muted-foreground font-normal">.live</span>
+          </h1>
+        </CardTitle>
+        <CardDescription>The Publishing Platform for Live Coding</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {error && <p className="text-red-500">{error}</p>}

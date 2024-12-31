@@ -10,7 +10,7 @@ const displayFont = Rethink_Sans({
 })
 
 export const metadata = {
-  title: "CodeThreads",
+  title: "CodeCook.live",
   description: "Live coding in post thread format",
 }
 

@@ -76,7 +76,9 @@ export default function Header() {
       <div className="container flex h-full items-center justify-between">
         <Link href="/" className="flex items-center space-x-3">
           <LogoIcon />
-          <span className="font-bold text-xl">CodeThreads</span>
+          <span className="font-bold text-xl">
+            CodeCook<span className="text-muted-foreground font-normal">.live</span>
+          </span>
         </Link>
 
         {!isLoading && (

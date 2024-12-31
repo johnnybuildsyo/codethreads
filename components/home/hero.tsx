@@ -32,7 +32,7 @@ export default function Hero() {
       <div className="container mx-auto max-w-4xl">
         <h1 className="text-4xl font-extrabold sm:text-5xl md:text-6xl text-balance">The Publishing Platform for Live Coding</h1>
         <p className="mt-4 text-xl text-muted-foreground text-balance">
-          CodeThreads is your platform for building your projects in the open where your commits become posts. Grow your audience while you grow your skills as a developer.
+          CodeCook.live is your platform for building your projects in the open where your commits become posts. Grow your audience while you grow your skills as a developer.
         </p>
         <div className="mt-8">
           {profile ? (
@@ -45,7 +45,7 @@ export default function Hero() {
                 <Check className="h-5 w-5 text-green-500" />
                 <span>You’re on the waitlist!</span>
               </div>
-              <p className="text-sm text-muted-foreground">We’ll notify you when CodeThreads is ready.</p>
+              <p className="text-sm text-muted-foreground">We’ll notify you when its time to start cooking!</p>
             </div>
           ) : (
             <Button className="text-xl px-12 py-4 h-auto" onClick={() => setDialogOpen(true)}>

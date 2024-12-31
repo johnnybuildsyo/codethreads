@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { Database } from "@/lib/supabase/database.types"
 import { ThreadSection } from "@/components/threads/editor/types"
 
-export type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas" | "published_at"> & {
+export type ThreadData = Pick<Database["public"]["Tables"]["threads"]["Insert"], "title" | "commit_shas"> & {
   sections: ThreadSection[]
 }
 

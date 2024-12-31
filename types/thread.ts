@@ -18,7 +18,6 @@ export interface Thread {
   title: string
   sections: ThreadSection[]
   commit_shas: string[]
-  published_at: string | null
   created_at: string
   updated_at: string
   project_id: string

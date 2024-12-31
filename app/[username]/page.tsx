@@ -71,6 +71,14 @@ export default async function UserPage({ params }: UserPageProps) {
             github={profile.github_username}
             twitter={profile.twitter_username}
             isCurrentUser={isCurrentUser}
+            links={
+              profile.links
+                ? ((profile.links as any[]) || []).map((link) => ({
+                    title: link.title || "",
+                    url: link.url || "",
+                  }))
+                : []
+            }
           />
           <ProjectList projects={profile.projects || []} username={profile.username} isCurrentUser={isCurrentUser} />
         </div>

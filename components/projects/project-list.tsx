@@ -47,7 +47,7 @@ export function ProjectList({ projects, username, isCurrentUser }: ProjectListPr
             project={{
               id: project.id,
               name: project.name,
-              title: project.name,
+              title: project.display_name,
               description: project.description || "",
               threadCount: 0,
               lastUpdated: project.updated_at,

@@ -111,13 +111,9 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 pt-2 pb-4">
         <div className="flex items-center justify-between">
           <Label>Links</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addLink}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Link
-          </Button>
         </div>
 
         <div className="space-y-3">
@@ -131,6 +127,10 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
               </Button>
             </div>
           ))}
+          <Button type="button" variant="outline" size="sm" onClick={addLink}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add Link
+          </Button>
         </div>
       </div>
 

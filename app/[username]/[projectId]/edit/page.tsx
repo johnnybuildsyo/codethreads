@@ -15,34 +15,35 @@ export default async function ProjectEditPage({ params }: ProjectEditPageProps) 
   const { username, projectId } = await params
   const supabase = await createClient()
 
-  const [
-    { data: project },
-    {
-      data: { session },
-    },
-  ] = await Promise.all([
-    supabase
-      .from("projects")
-      .select(
-        `
-        *,
-        profiles!inner (
-          name,
-          username,
-          avatar_url
-        )
+  // Get authenticated user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (!user || userError) {
+    redirect("/signin")
+  }
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select(
       `
+      *,
+      profiles!inner (
+        name,
+        username,
+        avatar_url
       )
-      .eq("name", projectId)
-      .eq("profiles.username", username)
-      .single(),
-    supabase.auth.getSession(),
-  ])
+    `
+    )
+    .eq("name", projectId)
+    .eq("profiles.username", username)
+    .single()
 
   if (!project) notFound()
 
   // Check if user is the owner
-  if (!session || session.user.id !== project.owner_id) {
+  if (user.id !== project.owner_id) {
     redirect(`/${username}/${projectId}`)
   }
 

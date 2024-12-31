@@ -26,12 +26,10 @@ import { CommitDiff } from "./editor/commit-diff"
 import { FileChange, ThreadSection } from "./editor/types"
 import { ThreadIdeas } from "./editor/thread-ideas"
 import { generateSectionPrompt } from "@/lib/ai/threads/prompts"
-import { LoadingAnimation } from "../ui/loading-animation"
 import type { Thread } from "@/types/thread"
 import { upsertThread } from "@/app/api/threads/actions"
 import { CommitLink } from "./commit-link"
 import { CommitLinkSelector } from "./editor/commit-link-selector"
-import { Switch } from "@/components/ui/switch"
 
 interface ThreadEditorProps {
   projectId: string
@@ -48,7 +46,6 @@ interface ThreadEditorProps {
 export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEditorProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState(thread?.title || "")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
   const router = useRouter()
@@ -86,7 +83,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   const [activeSectionId, setActiveSectionId] = useState<string>()
   const [diffDialogOpen, setDiffDialogOpen] = useState(false)
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false)
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
 
@@ -128,80 +124,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
     }
     fetchDiff()
   }, [commit.sha, fullName])
-
-  const getProjectPath = () => {
-    const { username, projectId } = params
-    return `/${username}/${projectId}`
-  }
-
-  const handleCancel = () => {
-    router.push(getProjectPath())
-  }
-
-  const handleSubmit = async (publish: boolean = false) => {
-    setIsSubmitting(true)
-
-    try {
-      const cleanedSections = sections.map((section): ThreadSection => {
-        switch (section.type) {
-          case "markdown":
-            return {
-              id: section.id,
-              type: "markdown",
-              content: section.content || "",
-              role: section.role,
-            }
-          case "commit-links":
-            return {
-              id: section.id,
-              type: "commit-links",
-              content: section.content || "",
-              commits: section.commits || [],
-            }
-          case "code":
-            return {
-              id: section.id,
-              type: "code",
-              content: section.content || "",
-              filename: section.filename,
-            }
-          case "diff":
-            return {
-              id: section.id,
-              type: "diff",
-              content: section.content || "",
-              file: section.file,
-            }
-          case "image":
-            return {
-              id: section.id,
-              type: "image",
-              content: section.content || "",
-              imageUrl: section.imageUrl,
-            }
-        }
-      })
-
-      const threadData = {
-        title,
-        sections: cleanedSections,
-        commit_shas: [commit.sha],
-        published_at: publish ? new Date().toISOString() : null,
-      }
-
-      const { success, path } = await upsertThread(projectId, threadData, thread?.id)
-
-      if (success) {
-        toast.success(publish ? "Thread published!" : thread ? "Thread updated!" : "Draft saved!")
-        router.push(path)
-      }
-    } catch (error) {
-      console.error("Failed to save thread", error)
-      toast.error("Failed to save thread. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -278,8 +200,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
   // Debounced auto-save handler
   const debouncedSave = useCallback(
     async (title: string, sections: ThreadSection[]) => {
-      if (!autoSaveEnabled) return
-
       setSaveStatus("saving")
       try {
         const cleanedSections = sections.map((section): ThreadSection => {
@@ -326,7 +246,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
           title,
           sections: cleanedSections,
           commit_shas: [commit.sha],
-          published_at: null,
         }
 
         const { success } = await upsertThread(projectId, threadData, thread?.id)
@@ -341,7 +260,7 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
         setSaveStatus("error")
       }
     },
-    [autoSaveEnabled, projectId, commit.sha, thread?.id]
+    [projectId, commit.sha, thread?.id]
   )
 
   // Auto-save when content changes
@@ -365,7 +284,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
             <div className="flex flex-col items-end gap-1 ml-auto">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Auto-save</span>
-                <Switch className="scale-75" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} />
               </div>
               <div className="text-[10px] text-muted-foreground font-mono">
                 {saveStatus === "saving" && <span>Saving...</span>}
@@ -531,27 +449,6 @@ export function ThreadEditor({ projectId, commit, fullName, thread }: ThreadEdit
                     {section.content}
                   </div>
                 ))}
-            </div>
-          )}
-
-          {isSubmitting ? (
-            <LoadingAnimation className="w-full text-right text-sm">Saving CodeThread</LoadingAnimation>
-          ) : (
-            <div className="flex justify-end space-x-2">
-              <Button variant="ghost" onClick={handleCancel}>
-                Cancel
-              </Button>
-              {!autoSaveEnabled && (
-                <Button variant="outline" onClick={() => handleSubmit(false)} disabled={!title || isSubmitting}>
-                  <Save className="h-4 w-4 opacity-50" />
-                  {thread ? "Save Changes" : "Save as Draft"}
-                </Button>
-              )}
-
-              <Button onClick={() => handleSubmit(true)} disabled={!title || isSubmitting}>
-                <Zap className="h-4 w-4 opacity-70" />
-                {thread ? (autoSaveEnabled ? "Update & Publish" : "Publish CodeThread") : "Publish CodeThread"}
-              </Button>
             </div>
           )}
         </div>

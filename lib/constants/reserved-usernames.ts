@@ -7,10 +7,13 @@ export const RESERVED_USERNAMES = [
   'blog',
   'docs',
   'help',
+  'join',
   'legal',
   'login',
   'logout',
   'me',
+  'profile',
+  'pricing',
   'privacy',
   'settings',
   'signin',
@@ -21,12 +24,15 @@ export const RESERVED_USERNAMES = [
   'welcome',
   
   // Features
+  'go',
   'explore',
   'search',
   'notifications',
   'dashboard',
+  'hackathon',
   'projects',
   'threads',
+  'trending',
   
   // Meta
   'about',
@@ -36,8 +42,15 @@ export const RESERVED_USERNAMES = [
   'status',
   
   // Brand
-  'codethreads',
-  'code-threads',
+  'codecook',
+  'code-cook',
+  'codecooklive',
   'team',
   'official',
+  'cook',
+  'cooking',
+  'cookoff',
+  'cookoffs',
+  'cook-off',
+  'cook-offs',
 ] as const 

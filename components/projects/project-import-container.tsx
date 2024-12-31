@@ -4,8 +4,9 @@ import { ProjectImport } from "./project-import"
 import { useState, useEffect } from "react"
 import type { GithubRepo } from "@/types/github"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import { LoadingAnimation } from "../ui/loading-animation"
+import { createProject } from "@/app/actions/create-project"
+
 interface ProjectImportContainerProps {
   username: string
 }
@@ -22,7 +23,6 @@ interface GitHubApiResponse {
 }
 
 export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
-  const router = useRouter()
   const [repos, setRepos] = useState<GithubRepo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -76,43 +76,17 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
 
   const handleProjectSelect = async (repoId: number) => {
     setIsCreating(true)
-    const supabase = createClient()
+    setError("")
 
     try {
       const selectedRepo = repos.find((repo) => repo.id === repoId)
       if (!selectedRepo) throw new Error("Repository not found")
 
-      // Get session and profile data
-      const [
-        {
-          data: { session },
-        },
-        { data: profile },
-      ] = await Promise.all([supabase.auth.getSession(), supabase.from("profiles").select("id").eq("username", username).single()])
-
-      if (!session) throw new Error("Not authenticated")
-      if (!profile) throw new Error("Profile not found")
-
-      // Create project with profile_id
-      const { data: project, error: projectError } = await supabase
-        .from("projects")
-        .insert({
-          github_id: selectedRepo.id,
-          name: selectedRepo.name,
-          display_name: selectedRepo.name.replace(/-/g, " ").replace(/_/g, " "),
-          full_name: `${session.user.user_metadata.user_name}/${selectedRepo.name}`,
-          description: selectedRepo.description,
-          homepage: selectedRepo.homepage,
-          owner_id: session.user.id,
-          profile_id: profile.id,
-        })
-        .select()
-        .single()
-
-      if (projectError) throw projectError
-
-      // Redirect to the new project page
-      router.push(`/${username}/${project.name}`)
+      const result = await createProject(username, selectedRepo)
+      if (result?.error) {
+        setError(result.error)
+        setIsCreating(false)
+      }
     } catch (error) {
       console.error("Failed to create project:", error)
       setError(error instanceof Error ? error.message : "Failed to create project")

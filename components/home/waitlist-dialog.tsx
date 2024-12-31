@@ -51,7 +51,7 @@ export function WaitlistDialog({ open, onOpenChange }: WaitlistDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Join the CodeThreads Waitlist</DialogTitle>
+          <DialogTitle>Join the Waitlist</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="flex flex-col items-center justify-center gap-4">
           <div className="flex flex-col sm:flex-row w-full items-center gap-2">

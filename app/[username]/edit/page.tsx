@@ -2,6 +2,7 @@ import Header from "@/components/layout/header"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 import { EditProfileForm, Link } from "@/components/users/edit-profile-form"
+import { Database } from "@/lib/supabase/database.types"
 
 interface EditProfilePageProps {
   params: Promise<{
@@ -24,7 +25,20 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
     .select("*")
     .eq("username", username)
     .single()
-    .then(({ data }) => (data ? { ...data, links: JSON.parse(data.links as string) as Link[] } : null))
+    .then(({ data }) => {
+      if (!data) return null
+      // Handle links which is stored as JSONB with default '[]'
+      const links = data.links
+        ? ((data.links as any[]) || []).map((link) => ({
+            title: link.title || "",
+            url: link.url || "",
+          }))
+        : []
+      return {
+        ...data,
+        links,
+      }
+    })
 
   if (!profile) {
     notFound()
