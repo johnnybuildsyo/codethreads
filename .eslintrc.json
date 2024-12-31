@@ -7,6 +7,10 @@
   },
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "react/prop-types": "off"
+    "react/prop-types": "off",
+    "prettier/prettier": 2,
+    "@typescript-eslint/no-explicit-any": 1,
+    "max-lines": 1,
+    "react-hooks/exhaustive-deps": 0
   }
 }
