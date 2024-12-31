@@ -1,5 +1,5 @@
 import Header from "@/components/layout/header"
-import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink, LinkIcon } from "lucide-react"
+import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink, LinkIcon, Pencil } from "lucide-react"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/server"
@@ -9,6 +9,7 @@ import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 import { ThreadList } from "@/components/threads/thread-list"
 import { ThreadSection } from "@/components/threads/editor/types"
 import { Thread } from "@/types/thread"
+import { Button } from "@/components/ui/button"
 
 interface ProjectPageProps {
   params: Promise<{
@@ -93,7 +94,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <h1 className="text-3xl font-bold mb-1">{project.display_name || project.name}</h1>
           {project.homepage && (
             <div>
@@ -102,6 +103,14 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                 <span>{project.homepage}</span>
               </a>
             </div>
+          )}
+          {isOwner && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/${username}/${projectId}/edit`} className="inline-flex items-center space-x-2 absolute top-0 right-0">
+                <Pencil className="h-3 w-3" />
+                <span>Edit Project</span>
+              </Link>
+            </Button>
           )}
           <div className="flex items-center space-x-4 mb-6">
             <Link href={`/${username}`} className="group inline-flex items-center space-x-2 font-mono text-xs border px-2 py-1 rounded-md hover:bg-foreground/5 transition-colors">
