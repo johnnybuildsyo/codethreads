@@ -4,7 +4,7 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 import { getLanguageFromFilename } from "@/lib/utils"
 import { CommitLink as CommitLinkComponent } from "./commit-link"
 import { CommitDiff } from "./editor/commit-diff"
-import { FileChange, ThreadSection, CommitLink } from "./editor/types"
+import { ThreadSection } from "./editor/types"
 
 type ThreadContentProps = {
   title: string
