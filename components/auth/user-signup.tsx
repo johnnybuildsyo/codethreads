@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Github } from "lucide-react"
 import { signInWithGitHub } from "./actions"
 import { useState } from "react"
-import { LoadingAnimation } from "../ui/loading-animation"
 import LogoIcon from "../graphics/logo-icon"
 
 export function UserSignup() {
