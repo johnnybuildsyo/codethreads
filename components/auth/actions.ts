@@ -1,29 +1,21 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/client"
 
-export async function signInWithGitHub() {
-  console.log("Server: Starting GitHub OAuth...")
-  const supabase = await createClient()
+export async function signInWithGitHub(redirectPath?: string) {
+  const supabase = createClient()
 
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-        scopes: 'read:user',
-      },
-    })
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback${redirectPath ? `?redirect_path=${encodeURIComponent(redirectPath)}` : ""}`,
+    },
+  })
 
-    if (error) {
-      console.error("Server: GitHub OAuth Error:", error)
-      throw error
-    }
-
-    console.log("Server: OAuth response:", JSON.stringify(data, null, 2))
-    return data.url
-  } catch (error) {
-    console.error("Server: Unexpected error:", error)
-    throw error
+  if (error) {
+    console.error("Error signing in with GitHub:", error)
+    return null
   }
+
+  return data.url
 }

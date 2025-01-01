@@ -21,7 +21,11 @@ export function ProjectActions({ username, projectId, fullName, totalCommits, ha
 
   const handleStartFromCommit = async () => {
     if (!hasGitHubToken) {
-      await signInWithGitHub()
+      const url = await signInWithGitHub(window.location.pathname)
+      if (url) {
+        window.location.href = url
+        return
+      }
     }
     setShowCommits(true)
   }
