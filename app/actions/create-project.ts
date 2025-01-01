@@ -53,7 +53,6 @@ export async function createProject(username: string, repo: GithubRepo) {
     if (projectError) throw projectError
 
     revalidatePath(`/${username}`)
-    redirect(`/${username}/${project.name}`)
   } catch (error) {
     return { 
       error: error instanceof Error ? error.message : "Failed to create project" 

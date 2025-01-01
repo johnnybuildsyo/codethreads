@@ -6,9 +6,13 @@ import type { GithubRepo } from "@/types/github"
 import { createClient } from "@/lib/supabase/client"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { createProject } from "@/app/actions/create-project"
+import { GitHubAuthGate } from "@/components/auth/github-auth-gate"
 
 interface ProjectImportContainerProps {
   username: string
+  className?: string
+  existingProjects?: number[]
+  onImportComplete?: () => void
 }
 
 interface GitHubApiResponse {
@@ -22,11 +26,13 @@ interface GitHubApiResponse {
   homepage: string | null
 }
 
-export function ProjectImportContainer({ username }: ProjectImportContainerProps) {
+export function ProjectImportContainer({ username, className, existingProjects, onImportComplete }: ProjectImportContainerProps) {
   const [repos, setRepos] = useState<GithubRepo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState("")
+
+  console.log({ existingProjects })
 
   useEffect(() => {
     async function fetchRepos() {
@@ -52,16 +58,19 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
         if (!response.ok) throw new Error("Failed to fetch repositories")
 
         const data = await response.json()
-        const mappedRepos: GithubRepo[] = data.map((repo: GitHubApiResponse) => ({
-          id: repo.id,
-          name: repo.name,
-          description: repo.description || "",
-          stars: repo.stargazers_count,
-          forks: repo.forks_count,
-          language: repo.language,
-          updated_at: repo.updated_at,
-          homepage: repo.homepage,
-        }))
+        console.log({ data })
+        const mappedRepos: GithubRepo[] = data
+          .map((repo: GitHubApiResponse) => ({
+            id: repo.id,
+            name: repo.name,
+            description: repo.description || "",
+            stars: repo.stargazers_count,
+            forks: repo.forks_count,
+            language: repo.language,
+            updated_at: repo.updated_at,
+            homepage: repo.homepage,
+          }))
+          .filter((repo: GithubRepo) => !existingProjects?.includes(repo.id))
 
         setRepos(mappedRepos)
       } catch (err) {
@@ -85,17 +94,21 @@ export function ProjectImportContainer({ username }: ProjectImportContainerProps
       const result = await createProject(username, selectedRepo)
       if (result?.error) {
         setError(result.error)
-        setIsCreating(false)
+      } else {
+        onImportComplete?.()
       }
-    } catch (error) {
-      console.error("Failed to create project:", error)
-      setError(error instanceof Error ? error.message : "Failed to create project")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create project")
+    } finally {
       setIsCreating(false)
     }
   }
 
   if (isLoading) return <LoadingAnimation className="w-full text-center pt-24">Loading repositories</LoadingAnimation>
+  if (error === "GitHub access token not found") {
+    return <GitHubAuthGate>Connect your GitHub account to import your repositories</GitHubAuthGate>
+  }
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>
 
-  return <ProjectImport username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={isCreating} />
+  return <ProjectImport className={className} username={username} repos={repos} onProjectSelect={handleProjectSelect} isCreating={isCreating} isFirstProject={existingProjects?.length === 0} />
 }

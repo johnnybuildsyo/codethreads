@@ -1,4 +1,4 @@
-"use server"
+"use client"
 
 import { createClient } from "@/lib/supabase/client"
 
@@ -9,6 +9,7 @@ export async function signInWithGitHub(redirectPath?: string) {
     provider: "github",
     options: {
       redirectTo: `${window.location.origin}/auth/callback${redirectPath ? `?redirect_path=${encodeURIComponent(redirectPath)}` : ""}`,
+      scopes: "repo",
     },
   })
 

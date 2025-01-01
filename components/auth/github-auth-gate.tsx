@@ -16,7 +16,7 @@ export function GitHubAuthGate({ children }: { children?: React.ReactNode }) {
       <Button
         onClick={async () => {
           setIsLoading(true)
-          const url = await signInWithGitHub()
+          const url = await signInWithGitHub(window.location.pathname)
           if (url) {
             window.location.href = url
           } else {

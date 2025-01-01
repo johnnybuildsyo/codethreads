@@ -13,12 +13,14 @@ import { WaitlistDialog } from "../home/waitlist-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/lib/actions/auth"
+
 export default function Header() {
   const { theme, setTheme } = useTheme()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost"
 
   useEffect(() => {
     async function initAuth() {
@@ -36,6 +38,8 @@ export default function Header() {
     initAuth()
   }, [])
 
+  console.log({ user, profile })
+
   return (
     <header className="py-4 px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full h-20 border-b border-foreground/10">
       <div className="container flex h-full items-center justify-between">
@@ -48,7 +52,7 @@ export default function Header() {
 
         {!isLoading && (
           <>
-            {!user && (
+            {!user && !isLocalhost && (
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="mr-2">
                   <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

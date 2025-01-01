@@ -6,9 +6,9 @@ import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
+import { createClient } from "@/lib/supabase/client"
 
 interface Commit {
   sha: string
@@ -31,7 +31,7 @@ interface CommitManagerProps {
 const COMMITS_PER_PAGE = 5
 const COMMITS_PER_PAGE_LOAD = 30
 
-export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
+export function CommitManager({ projectId, fullName, totalCommits }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
   const [filteredCommits, setFilteredCommits] = useState<Commit[]>([])
   const [loading, setLoading] = useState(false)
@@ -41,6 +41,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
+  const [creatingSession, setCreatingSession] = useState<string | null>(null)
   const router = useRouter()
 
   // Update filteredCommits whenever commits change
@@ -196,6 +197,30 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
     }
   }
 
+  const handleStartSession = async (commit: Commit) => {
+    setCreatingSession(commit.sha)
+    try {
+      const supabase = createClient()
+      const { data: session, error } = await supabase
+        .from("sessions")
+        .insert({
+          project_id: projectId,
+          title: commit.commit.message.split("\n")[0],
+          blocks: [],
+          commit_shas: [commit.sha],
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      router.push(`${window.location.pathname}/session/${session.id}/edit`)
+    } catch (error) {
+      console.error("Failed to create session:", error)
+      setCreatingSession(null)
+    }
+  }
+
   if (error) return <div className="text-sm text-red-500">Error: {error}</div>
 
   const pageStart = page * COMMITS_PER_PAGE
@@ -260,9 +285,9 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
             <p className="font-medium">{commit.commit.message.split("\n")[0]}</p>
             <p className="text-sm text-muted-foreground mt-1">{new Date(commit.commit.author.date).toLocaleDateString()}</p>
             <div className="mt-4 flex items-center space-x-2">
-              <Link href={`${window.location.pathname}/session/new?commit=${commit.sha}`}>
-                <Button>Start Session</Button>
-              </Link>
+              <Button onClick={() => handleStartSession(commit)} disabled={creatingSession === commit.sha}>
+                {creatingSession === commit.sha ? "Creating..." : "Start Session"}
+              </Button>
               <Button onClick={() => handleAction(commit, "ignore")} variant="ghost">
                 Ignore
               </Button>
