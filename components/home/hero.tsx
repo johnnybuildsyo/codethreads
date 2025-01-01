@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
-import { Check, Zap } from "lucide-react"
+import { Check } from "lucide-react"
 import { WaitlistDialog } from "./waitlist-dialog"
 import { BoltIcon } from "@heroicons/react/24/solid"
 

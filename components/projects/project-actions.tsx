@@ -62,14 +62,14 @@ export function ProjectActions({ username, projectId, fullName, totalCommits, ha
         <Card className="mt-8 max-w-3xl mx-auto">
           <CardContent className="grid grid-cols-2 gap-6 p-6">
             <Card className="p-8 flex flex-col items-center justify-center gap-8">
-              <p className="text-center text-balance text-muted-foreground">We'll start you off with a clean slate and listen for new commits</p>
+              <p className="text-center text-balance text-muted-foreground">We’ll start you off with a clean slate and listen for new commits</p>
               <Button className="text-base py-3 w-64 h-auto" onClick={handleStartFromScratch} disabled={isCreating}>
                 <CookingPot className="h-4 w-4 mr-2" />
                 {isCreating ? "Creating..." : "Start from Scratch"}
               </Button>
             </Card>
             <Card className="p-8 flex flex-col items-center justify-center gap-8">
-              <p className="text-center text-balance text-muted-foreground">Import commits you've already cooked up and start from there</p>
+              <p className="text-center text-balance text-muted-foreground">Import commits you’ve already cooked up and start from there</p>
               <Button className="text-base py-3 w-64 h-auto" onClick={handleStartFromCommit}>
                 <Sparkles className="h-4 w-4 mr-2" />
                 {showCommits ? "Loading Commits..." : "Start from a Commit"}

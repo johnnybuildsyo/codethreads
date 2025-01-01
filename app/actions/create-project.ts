@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import type { GithubRepo } from "@/types/github"
 import { toSlug } from "@/lib/utils/slug"
 
@@ -53,8 +52,10 @@ export async function createProject(username: string, repo: GithubRepo) {
     if (projectError) throw projectError
 
     revalidatePath(`/${username}`)
+    return { project, error: null }
   } catch (error) {
     return { 
+      project: null,
       error: error instanceof Error ? error.message : "Failed to create project" 
     }
   }
