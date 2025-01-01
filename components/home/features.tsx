@@ -1,19 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Code, Users, Zap } from "lucide-react"
+import { BoltIcon } from "@heroicons/react/24/solid"
+import { Code, Users } from "lucide-react"
 
 const features = [
   {
-    icon: <Code className="h-8 w-8 text-primary" />,
+    icon: <Code className="h-8 w-8 text-blue-500" />,
     title: "Live Coding Sessions",
     description: "Share your coding process step-by-step in real-time post sessions.",
   },
   {
-    icon: <Users className="h-8 w-8 text-primary" />,
+    icon: <Users className="h-8 w-8 text-blue-500" />,
     title: "Community Feedback",
     description: "Get instant feedback and suggestions from fellow developers.",
   },
   {
-    icon: <Zap className="h-8 w-8 text-primary" />,
+    icon: <BoltIcon className="h-8 w-8 text-blue-500" />,
     title: "Learn by Doing",
     description: "Improve your skills by building projects and sharing your progress.",
   },
@@ -27,7 +28,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <Card key={index}>
               <CardHeader>
-                <div className="mb-2">{feature.icon}</div>
+                <div className="mb-2 text-blue-500">{feature.icon}</div>
                 <CardTitle>{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>

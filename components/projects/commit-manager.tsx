@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { LoadingAnimation } from "../ui/loading-animation"
@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
+import { createSession } from "@/app/actions/create-session"
 
 interface Commit {
   sha: string
@@ -200,23 +200,16 @@ export function CommitManager({ projectId, fullName, totalCommits }: CommitManag
   const handleStartSession = async (commit: Commit) => {
     setCreatingSession(commit.sha)
     try {
-      const supabase = createClient()
-      const { data: session, error } = await supabase
-        .from("sessions")
-        .insert({
-          project_id: projectId,
-          title: commit.commit.message.split("\n")[0],
-          blocks: [],
-          commit_shas: [commit.sha],
-        })
-        .select()
-        .single()
+      const { session, error } = await createSession(projectId, commit.sha, commit.commit.message)
 
-      if (error) throw error
+      if (error || !session) {
+        throw new Error(error || "Failed to create session")
+      }
 
       router.push(`${window.location.pathname}/session/${session.id}/edit`)
     } catch (error) {
       console.error("Failed to create session:", error)
+      setError(error instanceof Error ? error.message : "Failed to create session")
       setCreatingSession(null)
     }
   }

@@ -16,10 +16,11 @@ interface EditSessionPageProps {
 export default async function EditSessionPage({ params }: EditSessionPageProps) {
   const supabase = await createClient()
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (authError || !user) {
     redirect("/signin")
   }
 
@@ -31,14 +32,71 @@ export default async function EditSessionPage({ params }: EditSessionPageProps) 
     .select("*, commit_shas")
     .eq("id", sessionId)
     .single()
-    .then(({ data }) => (data ? { ...data, blocks: (JSON.parse(data.blocks as string) as SessionBlock[]) || [] } : null))
+    .then(({ data }) => {
+      if (!data) return null
+
+      const defaultBlocks = [
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "intro",
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "implementation",
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "summary",
+        },
+      ]
+
+      // Handle empty or missing blocks
+      if (!data.blocks || data.blocks === "[]" || data.blocks === "null") {
+        return {
+          ...data,
+          blocks: defaultBlocks,
+        }
+      }
+
+      // If blocks is already an array, use it
+      if (Array.isArray(data.blocks)) {
+        return {
+          ...data,
+          blocks: data.blocks.length === 0 ? defaultBlocks : data.blocks,
+        }
+      }
+
+      // If blocks is a string, try to parse it
+      if (typeof data.blocks === "string") {
+        try {
+          console.log("Parsing blocks:", data.blocks)
+          const parsedBlocks = JSON.parse(data.blocks)
+          return {
+            ...data,
+            blocks: Array.isArray(parsedBlocks) && parsedBlocks.length === 0 ? defaultBlocks : parsedBlocks,
+          }
+        } catch (e) {
+          console.error("Error parsing blocks:", e, "Raw blocks:", data.blocks)
+          return { ...data, blocks: defaultBlocks }
+        }
+      }
+
+      // Fallback to default blocks
+      return { ...data, blocks: defaultBlocks }
+    })
 
   if (!sessionData) {
     notFound()
   }
 
   // Check if user is the author
-  if (sessionData.user_id !== session.user.id) {
+  if (sessionData.user_id !== user.id) {
     redirect(`/${username}/${projectId}/session/${sessionId}`)
   }
 
@@ -46,6 +104,23 @@ export default async function EditSessionPage({ params }: EditSessionPageProps) 
   const { data: project } = await supabase.from("projects").select("*, profiles!inner(username)").eq("name", projectId).eq("profiles.username", username).single()
 
   if (!project) notFound()
+
+  // Get GitHub token
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
+  if (sessionError || !session?.provider_token) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <h3 className="text-2xl font-bold mb-8">Edit Session</h3>
+          <GitHubAuthGate />
+        </main>
+      </div>
+    )
+  }
 
   // Fetch commit from GitHub
   const commitSha = sessionData.commit_shas[0]
