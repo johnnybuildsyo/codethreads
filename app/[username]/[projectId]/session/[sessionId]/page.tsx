@@ -5,7 +5,6 @@ import { SessionView } from "@/components/sessions/session-view"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
-import type { SessionBlock } from "@/lib/types/session"
 
 interface SessionPageProps {
   params: Promise<{
@@ -25,7 +24,65 @@ export default async function SessionPage({ params }: SessionPageProps) {
     .select("*, commit_shas")
     .eq("id", sessionId)
     .single()
-    .then(({ data }) => (data ? { ...data, blocks: (JSON.parse(data.blocks as string) as SessionBlock[]) || [] } : null))
+    .then(({ data }) => {
+      if (!data) return null
+
+      const defaultBlocks = [
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "intro",
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "implementation",
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "markdown",
+          content: "",
+          role: "summary",
+        },
+      ]
+
+      console.log("Raw blocks data:", data.blocks)
+
+      // Handle empty or missing blocks
+      if (!data.blocks || data.blocks === "[]" || data.blocks === "null") {
+        return {
+          ...data,
+          blocks: defaultBlocks,
+        }
+      }
+
+      // If blocks is already an array, use it
+      if (Array.isArray(data.blocks)) {
+        return {
+          ...data,
+          blocks: data.blocks.length === 0 ? defaultBlocks : data.blocks,
+        }
+      }
+
+      // If blocks is a string, try to parse it
+      if (typeof data.blocks === "string") {
+        try {
+          const parsedBlocks = JSON.parse(data.blocks)
+          return {
+            ...data,
+            blocks: Array.isArray(parsedBlocks) && parsedBlocks.length === 0 ? defaultBlocks : parsedBlocks,
+          }
+        } catch (e) {
+          console.error("Error parsing blocks:", e, "Raw blocks:", data.blocks)
+          return { ...data, blocks: defaultBlocks }
+        }
+      }
+
+      // Fallback to default blocks
+      return { ...data, blocks: defaultBlocks }
+    })
 
   if (!session) {
     notFound()

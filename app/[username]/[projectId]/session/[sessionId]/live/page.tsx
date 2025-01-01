@@ -4,7 +4,7 @@ import { SessionEditor } from "@/components/sessions/session-editor"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
 
-interface EditSessionPageProps {
+interface LiveSessionPageProps {
   params: Promise<{
     username: string
     projectId: string
@@ -12,7 +12,7 @@ interface EditSessionPageProps {
   }>
 }
 
-export default async function EditSessionPage({ params }: EditSessionPageProps) {
+export default async function LiveSessionPage({ params }: LiveSessionPageProps) {
   const supabase = await createClient()
   const {
     data: { user },
