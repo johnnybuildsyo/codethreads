@@ -11,11 +11,7 @@ interface SessionListProps {
 
 export function SessionList({ sessions, username, projectId, currentUser }: SessionListProps) {
   if (sessions.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No sessions yet</p>
-      </div>
-    )
+    return null
   }
 
   return (

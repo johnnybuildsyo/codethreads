@@ -1,7 +1,8 @@
 import Header from "@/components/layout/header"
-import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink, LinkIcon, Pencil } from "lucide-react"
+import { User, Star, GitFork, Eye, GitCommit, Calendar, Github, ExternalLink, LinkIcon, Pencil, CookingPot, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { CommitManager } from "@/components/projects/commit-manager"
@@ -197,6 +198,28 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           <div className="md:col-span-3 mt-8">
             <SessionList sessions={sessions?.map((t) => ({ ...t, blocks: t.blocks as unknown as SessionBlock[] })) || []} username={username} projectId={projectId} currentUser={session?.user} />
           </div>
+          <Card className="mt-8 max-w-3xl mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle className="text-4xl font-extrabold">Start Cooking</CardTitle>
+              <CardDescription>Start up a new live coding session</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-6">
+              <Card className="p-8 flex flex-col items-center justify-center gap-8">
+                <p className="text-center text-balance text-muted-foreground">We’ll start you off with a clean slate and listen for new commits</p>
+                <Button className="text-base py-3 w-64 h-auto">
+                  <CookingPot className="h-4 w-4" />
+                  Start from Scratch
+                </Button>
+              </Card>
+              <Card className="p-8 flex flex-col items-center justify-center gap-8">
+                <p className="text-center text-balance text-muted-foreground">Import commits you’ve already cooked up and start from there</p>
+                <Button className="text-base py-3 w-64 h-auto">
+                  <Sparkles className="h-4 w-4" />
+                  Start from a Commit
+                </Button>
+              </Card>
+            </CardContent>
+          </Card>
           <div className="grid gap-8 md:grid-cols-3 mt-8">
             {isOwner && (
               <div className="md:col-span-3">
