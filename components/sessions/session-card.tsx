@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { ChevronsRight, SquarePen } from "lucide-react"
 import { SessionBlock, Session } from "@/lib/types/session"
+import { BoltIcon } from "@heroicons/react/24/solid"
 
 interface SessionCardProps {
   session: Session
@@ -17,7 +18,7 @@ interface SessionCardProps {
 
 export function SessionCard({ session, username, projectId, featured = false, currentUser }: SessionCardProps) {
   const sessionUrl = `/${username}/${projectId}/session/${session.id}`
-  const editUrl = `${sessionUrl}/edit`
+  const startSessionUrl = `${sessionUrl}/live`
   const introSection = session.blocks.find((section: SessionBlock) => section.type === "markdown" && section.role === "intro")
   const introContent = introSection?.content || ""
   const previewContent = introContent.split("\n")[0] || "No preview available"
@@ -39,14 +40,14 @@ export function SessionCard({ session, username, projectId, featured = false, cu
       <div className="flex justify-end pb-1 gap-2">
         <Button asChild variant="outline" size="sm">
           <Link href={sessionUrl} className="inline-flex items-center">
-            View Session <ChevronsRight className="h-4 w-4" />
+            View Session
           </Link>
         </Button>
         {isAuthor && (
           <Button asChild size="sm">
-            <Link href={editUrl}>
-              Edit Session
-              <SquarePen className="h-3 w-3" />
+            <Link href={startSessionUrl}>
+              <BoltIcon className="h-3 w-3" />
+              Renew Session
             </Link>
           </Button>
         )}

@@ -72,13 +72,43 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   const stats = session?.provider_token && project.full_name ? await getGitHubStats(project.full_name, session.provider_token) : null
 
-  // Get sessions for this project
+  // Get sessions
   const sessions = (await supabase
     .from("sessions")
-    .select("*, commit_shas")
+    .select("*")
     .eq("project_id", project.id)
     .order("created_at", { ascending: false })
-    .then(({ data }) => data?.map((session) => ({ ...session, blocks: (JSON.parse(session.blocks as string) as SessionBlock[]) || [] })) || [])) as Session[]
+    .then(({ data }) => {
+      if (!data) return []
+
+      return data.map((session) => {
+        console.log("Raw blocks data for session", session.id, ":", session.blocks)
+
+        // Handle empty or missing blocks
+        if (!session.blocks || session.blocks === "[]" || session.blocks === "null") {
+          return { ...session, blocks: [] }
+        }
+
+        // If blocks is already an array, use it
+        if (Array.isArray(session.blocks)) {
+          return { ...session, blocks: session.blocks }
+        }
+
+        // If blocks is a string, try to parse it
+        if (typeof session.blocks === "string") {
+          try {
+            const parsedBlocks = JSON.parse(session.blocks)
+            return { ...session, blocks: Array.isArray(parsedBlocks) ? parsedBlocks : [] }
+          } catch (e) {
+            console.error("Error parsing blocks for session", session.id, ":", e, "Raw blocks:", session.blocks)
+            return { ...session, blocks: [] }
+          }
+        }
+
+        // Fallback to empty blocks
+        return { ...session, blocks: [] }
+      })
+    })) as Session[]
 
   return <ProjectView project={project} stats={stats} sessions={sessions} session={session} username={username} projectId={projectId} />
 }
