@@ -274,23 +274,22 @@ export function SessionEditor({ projectId, commit, fullName, session }: SessionE
 
   return (
     <SessionProvider>
+      <div className="w-full flex gap-4 justify-between items-center px-8 pb-4 border-b">
+        <h3 className="text-2xl font-bold">Live Session</h3>
+        <AIConnect enabled={aiEnabled} />
+        <div className="flex flex-col items-end gap-1 ml-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Auto-save</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground font-mono">
+            {saveStatus === "saving" && <span>Saving...</span>}
+            {saveStatus === "saved" && lastSavedAt && <span>Last saved at {new Date(lastSavedAt).toLocaleTimeString()}</span>}
+            {saveStatus === "error" && <span className="text-destructive">Save failed</span>}
+          </div>
+        </div>
+      </div>
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
         <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
-          <div className="flex gap-4 justify-between items-center">
-            <h3 className="text-2xl font-bold">Live Session</h3>
-            <AIConnect enabled={aiEnabled} />
-            <div className="flex flex-col items-end gap-1 ml-auto">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Auto-save</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground font-mono">
-                {saveStatus === "saving" && <span>Saving...</span>}
-                {saveStatus === "saved" && lastSavedAt && <span>Last saved at {new Date(lastSavedAt).toLocaleTimeString()}</span>}
-                {saveStatus === "error" && <span className="text-destructive">Save failed</span>}
-              </div>
-            </div>
-          </div>
-
           {sessionIdeas.length > 0 && <SessionIdeas ideas={sessionIdeas} onClose={() => setSessionIdeas([])} />}
 
           <CommitInfo commit={commit} files={files} fullName={fullName} />
@@ -450,7 +449,7 @@ export function SessionEditor({ projectId, commit, fullName, session }: SessionE
             </div>
           )}
         </div>
-        <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto">
+        <div className="hidden 2xl:block px-8 2xl:h-screen overflow-y-auto !mt-0">
           <SessionPreview title={title} blocks={blocks} theme={theme} fullName={fullName} commit={commit} />
         </div>
       </div>

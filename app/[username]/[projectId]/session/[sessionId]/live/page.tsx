@@ -153,7 +153,7 @@ export default async function LiveSessionPage({ params }: LiveSessionPageProps) 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-4xl 2xl:max-w-none w-full">
+      <main className="container mx-auto p-8 max-w-4xl 2xl:max-w-none w-full">
         <SessionEditor projectId={project.id} commit={commit} fullName={project.full_name} session={sessionData} />
       </main>
     </div>
