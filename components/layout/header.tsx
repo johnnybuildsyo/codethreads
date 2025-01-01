@@ -52,35 +52,29 @@ export default function Header() {
 
         {!isLoading && (
           <>
-            {!user && !isLocalhost && (
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="mr-2">
-                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/signin">Sign In</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </div>
-            )}
-            {user && (
-              // Signed in
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
 
+              {!user && !isLocalhost && (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/signin">Sign In</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/signup">Sign Up</Link>
+                  </Button>
+                </>
+              )}
+              {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="relative h-auto rounded-full p-2 gap-0">
                       <Avatar className="h-7 w-7">
-                        <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.name} />
+                        <AvatarImage src={profile?.avatar_url || user.user_metadata.avatar_url} alt={profile?.name || user.user_metadata.name} />
                         <AvatarFallback>{user.user_metadata.name[0]}</AvatarFallback>
                       </Avatar>
                       <ChevronDown className="ml-2 h-4 w-4" />
@@ -114,8 +108,8 @@ export default function Header() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
       </div>

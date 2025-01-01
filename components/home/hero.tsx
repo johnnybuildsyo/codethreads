@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import { Check, Zap } from "lucide-react"
 import { WaitlistDialog } from "./waitlist-dialog"
+import { BoltIcon } from "@heroicons/react/24/solid"
 
 export default function Hero() {
   const [profile, setProfile] = useState<{ username: string } | null>(null)
@@ -49,7 +50,7 @@ export default function Hero() {
             </div>
           ) : (
             <Button className="text-xl px-12 py-4 h-auto" onClick={() => setDialogOpen(true)}>
-              <Zap className="h-5 w-5 mr-2 scale-150" /> Join Waitlist
+              <BoltIcon className="h-5 w-5 mr-2 scale-[2] text-blue-500" /> Join Waitlist
             </Button>
           )}
         </div>
