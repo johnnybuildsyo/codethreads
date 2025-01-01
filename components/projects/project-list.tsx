@@ -1,6 +1,7 @@
 import { ProjectCard } from "./project-card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 interface ProjectWithCount {
   id: string
@@ -26,7 +27,10 @@ export function ProjectList({ projects, username, isCurrentUser }: ProjectListPr
         <h2 className="text-2xl font-bold">Projects</h2>
         {isCurrentUser && (
           <Button asChild>
-            <Link href="/projects/import">Import Project</Link>
+            <Link href="/projects/import">
+              <Plus />
+              Import Project
+            </Link>
           </Button>
         )}
       </div>
