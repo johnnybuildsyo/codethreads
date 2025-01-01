@@ -3,7 +3,6 @@ import Header from "@/components/layout/header"
 import { SessionEditor } from "@/components/sessions/session-editor"
 import { createClient } from "@/lib/supabase/server"
 import { notFound, redirect } from "next/navigation"
-import type { SessionBlock } from "@/lib/types/session"
 
 interface EditSessionPageProps {
   params: Promise<{
