@@ -7,6 +7,7 @@ import { LoadingAnimation } from "../ui/loading-animation"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Commit {
   sha: string
@@ -31,11 +32,12 @@ const COMMITS_PER_PAGE_LOAD = 30
 
 export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   const [commits, setCommits] = useState<Commit[]>([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(0)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [page, setPage] = useState(0)
   const [loadedPages, setLoadedPages] = useState<number[]>([])
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const router = useRouter()
 
   const fetchCommitsForPage = async (pageNum: number, perPage: number = COMMITS_PER_PAGE_LOAD) => {
     try {
@@ -48,17 +50,19 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
     }
   }
 
-  // Initial load of oldest commits
+  // Initial load of commits
   useEffect(() => {
     async function fetchInitialCommits() {
       setLoading(true)
       try {
         const perPage = COMMITS_PER_PAGE_LOAD
-        const initialPage = Math.ceil(totalCommits / perPage)
+        // If desc order (latest first), start from page 1, if asc order (oldest first), start from last page
+        const initialPage = sortOrder === "desc" ? 1 : Math.ceil(totalCommits / perPage)
 
         const data = await fetchCommitsForPage(initialPage)
-        setCommits(data.reverse())
+        setCommits(sortOrder === "desc" ? data : data.reverse())
         setLoadedPages([initialPage])
+        setPage(0) // Reset to first page when sort order changes
       } catch (error) {
         console.error("Failed to fetch initial commits:", error)
         setError("Failed to fetch commits")
@@ -67,8 +71,9 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
       }
     }
 
+    setLoadedPages([]) // Clear loaded pages when sort order changes
     fetchInitialCommits()
-  }, [fullName, totalCommits])
+  }, [fullName, totalCommits, sortOrder])
 
   // Load additional commits when needed
   useEffect(() => {
@@ -77,38 +82,29 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
       const totalPages = Math.ceil(totalCommits / perPage)
       const startIndex = page * COMMITS_PER_PAGE
 
-      // Calculate which GitHub page we need based on the commit index from the end
-      const commitsFromEnd = totalCommits - startIndex - COMMITS_PER_PAGE
-      const githubPage = Math.floor(commitsFromEnd / perPage) + 1
+      // Calculate which GitHub page we need based on sort order
+      let githubPage
+      if (sortOrder === "desc") {
+        // For latest first, we start from page 1 and go forward
+        githubPage = Math.floor(startIndex / perPage) + 1
+      } else {
+        // For oldest first, we start from the last page and go backward
+        const commitsFromEnd = totalCommits - startIndex - COMMITS_PER_PAGE
+        githubPage = Math.floor(commitsFromEnd / perPage) + 1
+      }
 
-      console.log(
-        JSON.stringify(
-          {
-            startIndex,
-            commitsFromEnd,
-            githubPage,
-            totalCommits,
-            perPage,
-            loadedPages,
-            totalPages,
-            calculation: {
-              startIndexDivPerPage: startIndex / perPage,
-              flooredStartIndex: Math.floor(startIndex / perPage),
-            },
-          },
-          null,
-          2
-        )
-      )
-
-      if (!loadedPages.includes(githubPage) && !loading && githubPage > 0) {
+      if (!loadedPages.includes(githubPage) && !loading && githubPage > 0 && githubPage <= totalPages) {
         setLoading(true)
         try {
           const newCommits = await fetchCommitsForPage(githubPage)
           setCommits((current) => {
             const allCommits = [...current, ...newCommits]
             const uniqueCommits = Array.from(new Map(allCommits.map((c) => [c.sha, c])).values())
-            return uniqueCommits.sort((a, b) => new Date(a.commit.author.date).getTime() - new Date(b.commit.author.date).getTime())
+            return uniqueCommits.sort((a, b) => {
+              const dateA = new Date(a.commit.author.date).getTime()
+              const dateB = new Date(b.commit.author.date).getTime()
+              return sortOrder === "asc" ? dateA - dateB : dateB - dateA
+            })
           })
           setLoadedPages((current) => [...current, githubPage])
         } catch (error) {
@@ -120,7 +116,7 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
     }
 
     loadMissingCommits()
-  }, [page, loadedPages, loading, totalCommits, fullName])
+  }, [page, loadedPages, loading, totalCommits, fullName, sortOrder])
 
   const handleAction = async (commit: Commit, action: "new" | "existing" | "ignore") => {
     if (action === "new") {
@@ -138,7 +134,18 @@ export function CommitManager({ fullName, totalCommits }: CommitManagerProps) {
   return (
     <div className="space-y-6 border-t pt-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">Commits</h2>
+        <div className="flex items-center space-x-4">
+          <h2 className="font-medium">Start Session from a Commit</h2>
+          <Select value={sortOrder} onValueChange={(value: "asc" | "desc") => setSortOrder(value)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort order" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Latest First</SelectItem>
+              <SelectItem value="asc">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className={cn("flex items-center space-x-2 text-sm", commits.length === 0 && "opacity-0")}>
           <Button variant="ghost" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
