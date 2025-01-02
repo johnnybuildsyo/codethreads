@@ -30,7 +30,7 @@ import { upsertSession } from "@/app/api/sessions/actions"
 import { CommitLink } from "./commit-link"
 import { CommitLinkSelector } from "./editor/commit-link-selector"
 
-interface SessionEditorProps {
+interface SessionManagerProps {
   projectId: string
   commit: {
     sha: string
@@ -42,7 +42,7 @@ interface SessionEditorProps {
   session?: Session
 }
 
-export function SessionEditor({ projectId, commit, fullName, session }: SessionEditorProps) {
+export function SessionManager({ projectId, commit, fullName, session }: SessionManagerProps) {
   const { theme } = useTheme()
   const [title, setTitle] = useState(session?.title || "")
   const [files, setFiles] = useState<FileChange[]>([])
