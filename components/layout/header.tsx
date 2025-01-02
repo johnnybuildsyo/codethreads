@@ -59,7 +59,7 @@ export default function Header() {
                 <span className="sr-only">Toggle theme</span>
               </Button>
 
-              {!user && !isLocalhost && (
+              {!user && isLocalhost && (
                 <>
                   <Button variant="ghost" asChild>
                     <Link href="/signin">Sign In</Link>
