@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
-import { SessionBlock, Session } from "@/lib/types/session"
+import { Session } from "@/lib/types/session"
 import { ProjectView } from "@/components/projects/project-view"
 
 interface ProjectPageProps {

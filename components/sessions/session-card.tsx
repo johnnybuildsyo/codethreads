@@ -4,7 +4,6 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
-import { ChevronsRight, SquarePen } from "lucide-react"
 import { SessionBlock, Session } from "@/lib/types/session"
 import { BoltIcon } from "@heroicons/react/24/solid"
 
