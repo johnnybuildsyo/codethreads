@@ -43,7 +43,7 @@ export function SessionCard({ session, username, projectId, featured = false, cu
           </Link>
         </Button>
         {isAuthor && (
-          <Button asChild size="sm">
+          <Button className="bg-blue-500 text-white hover:bg-blue-600" asChild size="sm">
             <Link href={startSessionUrl}>
               <BoltIcon className="h-3 w-3" />
               Renew Session
