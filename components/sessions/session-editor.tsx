@@ -104,9 +104,6 @@ export function SessionEditor({ projectId, commit, fullName, session }: SessionE
   let codeChanges = useMemo(() => {
     const fileArray = Array.isArray(files) ? files : []
     const relevantFiles = referencedFiles.size > 0 ? fileArray.filter((f) => referencedFiles.has(f.filename)) : fileArray.filter((f) => !shouldExcludeFile(f.filename))
-
-    console.log("relevantFiles", relevantFiles)
-
     return relevantFiles.map((f) => `File: ${f.filename}\n\nChanges:\n${f.newValue}`).join("\n\n---\n\n")
   }, [files, referencedFiles])
 
@@ -155,8 +152,6 @@ export function SessionEditor({ projectId, commit, fullName, session }: SessionE
     const updateBlockContent = (content: string) => {
       setBlocks((current) => current.map((s) => (s.id === block.id ? { ...s, content: content } : s)))
     }
-
-    console.log("prompt", prompt)
 
     await getStreamingText(prompt, updateBlockContent)
   }
