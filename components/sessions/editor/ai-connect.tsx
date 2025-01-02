@@ -4,7 +4,7 @@ import { SquareCheck, SquareX } from "lucide-react"
 
 export const AIConnect = ({ enabled }: { enabled: boolean }) => {
   return (
-    <Button className="inline-flex items-center gap-1" variant="outline" size="sm" className="text-xs font-mono">
+    <Button className="inline-flex items-center gap-1 text-xs font-mono" variant="outline" size="sm">
       {enabled ? (
         <div className="flex items-center gap-2">
           <SquareCheck className="h-3 w-3 text-green-500" /> AI Enabled
