@@ -34,6 +34,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      bluesky_connections: {
+        Row: {
+          access_jwt: string
+          created_at: string
+          did: string
+          handle: string
+          id: string
+          refresh_jwt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_jwt: string
+          created_at?: string
+          did: string
+          handle: string
+          id?: string
+          refresh_jwt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_jwt?: string
+          created_at?: string
+          did?: string
+          handle?: string
+          id?: string
+          refresh_jwt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commits: {
         Row: {
           author_email: string

@@ -29,6 +29,9 @@ import type { Session } from "@/lib/types/session"
 import { upsertSession } from "@/app/api/sessions/actions"
 import { CommitLink } from "./commit-link"
 import { CommitLinkSelector } from "./editor/commit-link-selector"
+import { DEFAULT_SESSION_BLOCKS } from "./editor/utils"
+import { BlueskyShareDialog } from "./editor/bluesky-share-dialog"
+import { BlueskyIcon } from "@/components/icons/bluesky"
 
 interface SessionManagerProps {
   projectId: string
@@ -47,28 +50,7 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
   const [title, setTitle] = useState(session?.title || "")
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
-  const [blocks, setBlocks] = useState<SessionBlock[]>(
-    session?.blocks || [
-      {
-        id: crypto.randomUUID(),
-        type: "markdown",
-        content: "",
-        role: "intro",
-      },
-      {
-        id: crypto.randomUUID(),
-        type: "markdown",
-        content: "",
-        role: "implementation",
-      },
-      {
-        id: crypto.randomUUID(),
-        type: "markdown",
-        content: "",
-        role: "summary",
-      },
-    ]
-  )
+  const [blocks, setBlocks] = useState<SessionBlock[]>(session?.blocks || DEFAULT_SESSION_BLOCKS)
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -82,6 +64,7 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [blueskyDialogOpen, setBlueskyDialogOpen] = useState(false)
 
   // Get filenames from code blocks
   const referencedFiles = useMemo(() => {
@@ -272,6 +255,10 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
       <div className="w-full flex gap-4 justify-between items-center px-8 pb-4 border-b">
         <h3 className="text-2xl font-bold">Live Session</h3>
         <AIConnect enabled={aiEnabled} />
+        <Button variant="outline" onClick={() => setBlueskyDialogOpen(true)}>
+          <BlueskyIcon className="h-4 w-4 mr-1 text-blue-500" />
+          Publish to Bluesky
+        </Button>
         <div className="flex flex-col items-end gap-1 ml-auto">
           <div className="flex items-center gap-2">
             <Circle className="h-4 w-4 rounded-full scale-75 text-green-500 ring-4 ring-green-500/30" fill="currentColor" />
@@ -555,6 +542,8 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
           })
         }}
       />
+
+      <BlueskyShareDialog open={blueskyDialogOpen} onOpenChange={setBlueskyDialogOpen} title={title} blocks={blocks} />
     </SessionProvider>
   )
 }
