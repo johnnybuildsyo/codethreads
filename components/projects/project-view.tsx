@@ -38,9 +38,9 @@ export function ProjectView({ project, stats, sessions, session, username, proje
           )}
           {isOwner && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/${username}/${projectId}/edit`} className="inline-flex items-center space-x-2 absolute top-0 right-0">
+              <Link href={`/${username}/${projectId}/live`} className="inline-flex items-center space-x-2 absolute top-0 right-0">
                 <Pencil className="h-3 w-3" />
-                <span>Edit Project</span>
+                <span>Renew Session</span>
               </Link>
             </Button>
           )}

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Circle } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -279,12 +279,13 @@ export function SessionEditor({ projectId, commit, fullName, session }: SessionE
         <AIConnect enabled={aiEnabled} />
         <div className="flex flex-col items-end gap-1 ml-auto">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Auto-save</span>
+            <Circle className="h-4 w-4 rounded-full scale-75 text-green-500 ring-4 ring-green-500/30" fill="currentColor" />
+            <span className="text-xs text-muted-foreground">Connected</span>
           </div>
           <div className="text-[10px] text-muted-foreground font-mono">
-            {saveStatus === "saving" && <span>Saving...</span>}
-            {saveStatus === "saved" && lastSavedAt && <span>Last saved at {new Date(lastSavedAt).toLocaleTimeString()}</span>}
-            {saveStatus === "error" && <span className="text-destructive">Save failed</span>}
+            {saveStatus === "saving" && <span>Updating...</span>}
+            {saveStatus === "saved" && lastSavedAt && <span>Last updated at {new Date(lastSavedAt).toLocaleTimeString()}</span>}
+            {saveStatus === "error" && <span className="text-destructive">Update failed</span>}
           </div>
         </div>
       </div>

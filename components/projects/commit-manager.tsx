@@ -206,7 +206,7 @@ export function CommitManager({ projectId, fullName, totalCommits }: CommitManag
         throw new Error(error || "Failed to create session")
       }
 
-      router.push(`${window.location.pathname}/session/${session.id}/edit`)
+      router.push(`${window.location.pathname}/session/${session.id}/live`)
     } catch (error) {
       console.error("Failed to create session:", error)
       setError(error instanceof Error ? error.message : "Failed to create session")

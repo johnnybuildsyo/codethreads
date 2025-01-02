@@ -114,7 +114,7 @@ export default async function LiveSessionPage({ params }: LiveSessionPageProps) 
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <h3 className="text-2xl font-bold mb-8">Edit Session</h3>
+          <h3 className="text-2xl font-bold mb-8">Live Session</h3>
           <GitHubAuthGate />
         </main>
       </div>
@@ -135,7 +135,7 @@ export default async function LiveSessionPage({ params }: LiveSessionPageProps) 
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <h3 className="text-2xl font-bold mb-8">Edit Session</h3>
+          <h3 className="text-2xl font-bold mb-8">Live Session</h3>
           <GitHubAuthGate />
         </main>
       </div>
