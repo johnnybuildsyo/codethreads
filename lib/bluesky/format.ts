@@ -9,7 +9,7 @@ export interface ThreadPost {
 
 export function extractHandleFromUrl(input: string): string {
   // Check if input is a Bluesky profile URL
-  const profileUrlMatch = input.match(/https?:\/\/bsky\.app\/profile\/([^\/\s]+)/)
+  const profileUrlMatch = input.match(/https?:\/\/bsky\.app\/profile\/([^/\s]+)/)
   if (profileUrlMatch) {
     return profileUrlMatch[1]
   }

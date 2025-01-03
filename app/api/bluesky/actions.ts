@@ -5,8 +5,6 @@ import { loginWithBluesky, type BlueskyCredentials } from "@/lib/bluesky/client"
 import { revalidatePath } from "next/cache"
 import type { Database } from "@/lib/supabase/database.types"
 
-type BlueskyConnection = Database["public"]["Tables"]["bluesky_connections"]["Row"]
-
 export async function connectBlueskyAccount(identifier: string, password: string) {
   const supabase = await createClient()
   
