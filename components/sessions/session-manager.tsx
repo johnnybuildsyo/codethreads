@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useTheme } from "next-themes"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Circle } from "lucide-react"
+import { X, Sparkles, FileDiff, Plus, ChevronDown, ChevronUp, SparklesIcon, Circle, ChevronsLeft } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableItem } from "./editor/sortable-item"
@@ -32,6 +33,8 @@ import { CommitLinkSelector } from "./editor/commit-link-selector"
 import { DEFAULT_SESSION_BLOCKS } from "./editor/utils"
 import { BlueskyShareDialog } from "./editor/bluesky-share-dialog"
 import { BlueskyIcon } from "@/components/icons/bluesky"
+import { useParams } from "next/navigation"
+import { PauseCircleIcon } from "@heroicons/react/24/solid"
 
 interface SessionManagerProps {
   projectId: string
@@ -47,6 +50,7 @@ interface SessionManagerProps {
 
 export function SessionManager({ projectId, commit, fullName, session }: SessionManagerProps) {
   const { theme } = useTheme()
+  const { username, projectId: projectSlug } = useParams()
   const [title, setTitle] = useState(session?.title || "")
   const [files, setFiles] = useState<FileChange[]>([])
   const [view, setView] = useState<"edit" | "preview">("edit")
@@ -270,6 +274,19 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
             {saveStatus === "error" && <span className="text-destructive">Update failed</span>}
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="flex flex-col items-center">
+            <Link href={`/${username}/${projectSlug}`} className="flex items-center text-xs h-auto">
+              <span className="flex items-center gap-1">
+                <PauseCircleIcon className="h-3 w-3" />
+                End Session
+              </span>
+              <span className="text-[10px] font-mono font-light flex items-center gap-0.5">
+                <ChevronsLeft className="h-3 w-3 opacity-50" /> back to project
+              </span>
+            </Link>
+          </Button>
+        </div>
       </div>
       <div className="space-y-4 2xl:grid 2xl:grid-cols-2">
         <div className="2xl:p-8 space-y-4 2xl:h-screen 2xl:overflow-y-auto">
@@ -322,8 +339,8 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
                               block.role === "intro"
                                 ? "Start with what problem you're solving or what feature you're adding. What motivated these changes?"
                                 : block.role === "summary"
-                                ? "Wrap up with the key benefits and any next steps. What impact will these changes have?"
-                                : "Explain the technical details. What approach did you take and why? What were the key decisions?"
+                                  ? "Wrap up with the key benefits and any next steps. What impact will these changes have?"
+                                  : "Explain the technical details. What approach did you take and why? What were the key decisions?"
                             }
                             rows={block.role === "implementation" ? 4 : 3}
                           />
