@@ -168,7 +168,13 @@ export function bisectText(text: string, maxLength: number): string[] {
   return chunks
 }
 
-export function formatBlueskyThread(title: string, blocks: SessionBlock[], projectFullName?: string): { posts: ThreadPost[]; hasImages: boolean } {
+export function formatBlueskyThread(
+  title: string,
+  blocks: SessionBlock[],
+  projectFullName?: string,
+  username?: string,
+  projectId?: string
+): { posts: ThreadPost[]; hasImages: boolean } {
   const posts: ThreadPost[] = []
   let currentPost = ""
   let currentImages: { alt: string; url: string }[] = []
@@ -251,6 +257,18 @@ export function formatBlueskyThread(title: string, blocks: SessionBlock[], proje
     }
   } else {
     posts.push({ text: title })
+  }
+
+  // Add project link to the last post if there's room, otherwise create a new post
+  if (username && projectId) {
+    const projectLink = `\n\nYou can check out all my code cooking sessions at codecook.live/${username}/${projectId}`
+    const lastPost = posts[posts.length - 1]
+    
+    if (lastPost.text.length + projectLink.length <= MAX_POST_LENGTH) {
+      lastPost.text += projectLink
+    } else {
+      posts.push({ text: projectLink.trim() })
+    }
   }
 
   return { posts, hasImages }

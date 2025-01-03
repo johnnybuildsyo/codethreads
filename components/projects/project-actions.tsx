@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { CookingPot, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { signInWithGitHub } from "@/components/auth/actions"

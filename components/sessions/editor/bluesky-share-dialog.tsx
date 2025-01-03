@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { ThreadPreview } from "./thread-preview"
 import { MAX_POST_LENGTH, type ThreadPost, extractHandleFromUrl, formatBlueskyThread } from "@/lib/bluesky/format"
+import { useParams } from "next/navigation"
 
 interface BlueskyShareDialogProps {
   open: boolean
@@ -20,6 +21,10 @@ interface BlueskyShareDialogProps {
 }
 
 export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectFullName }: BlueskyShareDialogProps) {
+  const params = useParams()
+  const username = params.username as string
+  const projectId = params.projectId as string
+
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingConnection, setIsCheckingConnection] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
@@ -35,10 +40,10 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
   useEffect(() => {
     if (open) {
       checkConnection()
-      const { posts } = formatBlueskyThread(title, blocks, projectFullName)
+      const { posts } = formatBlueskyThread(title, blocks, projectFullName, username, projectId)
       setEditedPosts(posts)
     }
-  }, [open, title, blocks, projectFullName])
+  }, [open, title, blocks, projectFullName, username, projectId])
 
   function addHashtag(tag: string) {
     if (editedPosts.length === 0) return
@@ -57,7 +62,7 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
       // Add hashtag to the end of the first post
       newPosts[0] = {
         ...firstPost,
-        text: firstPost.text.trim() + `\n\\#${tag}`,
+        text: firstPost.text.trim() + `\n#${tag}`,
       }
       return newPosts
     })

@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { FileChange } from "@/lib/types/session"
 import { Button } from "@/components/ui/button"
-import { shouldExcludeFile, cn } from "@/lib/utils"
+import { shouldExcludeFile } from "@/lib/utils"
 import { useState } from "react"
 import { CheckSquare, Square } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"

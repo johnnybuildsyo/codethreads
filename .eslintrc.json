@@ -1,5 +1,16 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
+  "extends": [
+    "next/core-web-vitals", 
+    "next/typescript",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
   "settings": {
     "react": {
       "version": "detect"
@@ -9,6 +20,7 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "@typescript-eslint/no-explicit-any": 1,
+    "@typescript-eslint/no-unused-vars": 2,
     "max-lines": 1,
     "react-hooks/exhaustive-deps": 0
   }
