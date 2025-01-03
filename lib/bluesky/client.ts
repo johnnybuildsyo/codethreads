@@ -32,6 +32,12 @@ export async function loginWithBluesky(identifier: string, password: string): Pr
 
 export async function createBskyAgent(credentials: BlueskyCredentials) {
   const agent = new BskyAgent({ service: BLUESKY_SERVICE })
-  await agent.resumeSession({ did: credentials.did, handle: credentials.handle, accessJwt: credentials.accessJwt, refreshJwt: credentials.refreshJwt })
+  await agent.resumeSession({ 
+    did: credentials.did, 
+    handle: credentials.handle, 
+    accessJwt: credentials.accessJwt, 
+    refreshJwt: credentials.refreshJwt,
+    active: true 
+  })
   return agent
 } 
