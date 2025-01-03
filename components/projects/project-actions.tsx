@@ -59,8 +59,9 @@ export function ProjectActions({ username, projectId, fullName, totalCommits, ha
   return (
     <>
       {!showCommits && (
-        <Card className="mt-8 max-w-3xl mx-auto">
-          <CardContent className="grid grid-cols-2 gap-6 p-6">
+        <div className="mt-12 max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold mb-4 text-center">Cook Up a New Coding Session</h2>
+          <div className="grid grid-cols-2 gap-6 p-6">
             <Card className="p-8 flex flex-col items-center justify-center gap-8">
               <p className="text-center text-balance text-muted-foreground">We’ll start you off with a clean slate and listen for new commits</p>
               <Button className="text-base py-3 w-64 h-auto" onClick={handleStartFromScratch} disabled={isCreating}>
@@ -75,8 +76,8 @@ export function ProjectActions({ username, projectId, fullName, totalCommits, ha
                 {showCommits ? "Loading Commits..." : "Start from a Commit"}
               </Button>
             </Card>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
       {hasGitHubToken && showCommits && (
         <div className="mt-8">

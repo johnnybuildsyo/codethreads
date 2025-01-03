@@ -367,25 +367,41 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
                           </div>
                         </div>
                       )}
-                      {block.type === "diff" && block.file && <CommitDiff files={[block.file]} defaultRenderDiff={false} theme={theme} />}
-                      {block.type === "code" && block.file && (
-                        <div className="relative font-mono text-sm bg-muted rounded-lg">
-                          <div className={cn("flex justify-between items-center text-xs text-muted-foreground px-4", block.isCollapsed ? "py-1" : "py-2")}>
-                            <span>{block.file.filename}</span>
-                            <Button variant="ghost" size="sm" onClick={() => setBlocks((s) => s.map((item) => (item.id === block.id ? { ...item, isCollapsed: !item.isCollapsed } : item)))}>
-                              {block.isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                      {block.type === "diff" && block.file && (
+                        <div className="relative">
+                          <div className="flex flex-col gap-2 absolute -right-8 px-1">
+                            <Button variant="ghost" className="h-6 w-6 p-0" onClick={() => setBlocks((s) => s.filter((item) => item.id !== block.id))}>
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
-                          {!block.isCollapsed && (
-                            <div className="p-4 pt-0">
-                              <Textarea
-                                value={block.file.newValue}
-                                onChange={(e) => setBlocks((s) => s.map((item) => (item.id === block.id ? { ...item, file: { ...item.file!, newValue: e.target.value } } : item)))}
-                                className="font-mono text-sm min-h-[200px] bg-transparent border-none focus-visible:ring-0 p-0 resize-none"
-                                spellCheck={false}
-                              />
+                          <CommitDiff files={[block.file]} defaultRenderDiff={false} theme={theme} />
+                        </div>
+                      )}
+                      {block.type === "code" && block.file && (
+                        <div className="relative">
+                          <div className="flex flex-col gap-2 absolute -right-8 px-1">
+                            <Button variant="ghost" className="h-6 w-6 p-0" onClick={() => setBlocks((s) => s.filter((item) => item.id !== block.id))}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="font-mono text-sm bg-muted rounded-lg">
+                            <div className={cn("flex justify-between items-center text-xs text-muted-foreground px-4", block.isCollapsed ? "py-1" : "py-2")}>
+                              <span>{block.file.filename}</span>
+                              <Button variant="ghost" size="sm" onClick={() => setBlocks((s) => s.map((item) => (item.id === block.id ? { ...item, isCollapsed: !item.isCollapsed } : item)))}>
+                                {block.isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                              </Button>
                             </div>
-                          )}
+                            {!block.isCollapsed && (
+                              <div className="p-4 pt-0">
+                                <Textarea
+                                  value={block.file.newValue}
+                                  onChange={(e) => setBlocks((s) => s.map((item) => (item.id === block.id ? { ...item, file: { ...item.file!, newValue: e.target.value } } : item)))}
+                                  className="font-mono text-sm min-h-[200px] bg-transparent border-none focus-visible:ring-0 p-0 resize-none"
+                                  spellCheck={false}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                       {block.type === "commit-links" && block.commits && (
@@ -444,6 +460,7 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
           setActiveBlockId(undefined)
         }}
         files={files}
+        existingFiles={blocks.find((s) => s.id === activeBlockId)?.type === "diff" ? blocks.filter((s) => s.type === "diff").map((s) => s.file?.filename || "") : []}
         onSelect={(selections) => {
           setBlocks((current) => {
             const index = current.findIndex((s) => s.id === activeBlockId)
@@ -489,7 +506,7 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
                     id: crypto.randomUUID(),
                     type: "code",
                     content: selection.file.newValue,
-                    filename: selection.file.filename,
+                    file: selection.file,
                   })
                 } else {
                   newBlocks.splice(index + 1 + i, 0, {
@@ -543,7 +560,7 @@ export function SessionManager({ projectId, commit, fullName, session }: Session
         }}
       />
 
-      <BlueskyShareDialog open={blueskyDialogOpen} onOpenChange={setBlueskyDialogOpen} title={title} blocks={blocks} />
+      <BlueskyShareDialog open={blueskyDialogOpen} onOpenChange={setBlueskyDialogOpen} title={title} blocks={blocks} projectFullName={fullName} />
     </SessionProvider>
   )
 }

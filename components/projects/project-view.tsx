@@ -127,7 +127,7 @@ export function ProjectView({ project, stats, sessions, session, username, proje
             </TooltipProvider>
           </div>
           <p className="text-muted-foreground">{project.description}</p>
-          <div className="md:col-span-3 mt-8">
+          <div className="md:col-span-3 mt-8 border-b-2 border-dotted">
             <SessionList sessions={sessions?.map((t) => ({ ...t, blocks: t.blocks as unknown as SessionBlock[] })) || []} username={username} projectId={projectId} currentUser={session?.user} />
           </div>
           {isOwner && <ProjectActions username={username} projectId={projectId} fullName={project.full_name} totalCommits={stats?.commits || 0} hasGitHubToken={!!session?.provider_token} />}

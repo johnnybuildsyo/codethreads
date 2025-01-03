@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { FileChange } from "@/lib/types/session"
 import { Button } from "@/components/ui/button"
-import { shouldExcludeFile } from "@/lib/utils"
+import { shouldExcludeFile, cn } from "@/lib/utils"
 import { useState } from "react"
 import { CheckSquare, Square } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -17,13 +17,15 @@ interface DiffSelectorProps {
   onClose: () => void
   files: FileChange[]
   onSelect: (selections: DiffSelection[]) => void
+  existingFiles?: string[]
 }
 
-export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorProps) {
+export function DiffSelector({ open, onClose, files, onSelect, existingFiles = [] }: DiffSelectorProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [codeType, setCodeType] = useState<"diff" | "code" | "commit-links">("diff")
   const fileArray = Array.isArray(files) ? files : []
   const filteredFiles = fileArray.filter((f) => !shouldExcludeFile(f.filename))
+  const existingFilesSet = new Set(existingFiles)
 
   const handleToggle = (filename: string) => {
     setSelectedFiles((prev) => {
@@ -85,19 +87,26 @@ export function DiffSelector({ open, onClose, files, onSelect }: DiffSelectorPro
         </RadioGroup>
 
         <div className="grid gap-1 max-h-[50vh] overflow-y-auto border rounded-md">
-          {filteredFiles.map((file) => (
-            <Button key={file.filename} variant="ghost" className="justify-start font-mono text-xs h-auto py-2" onClick={() => handleToggle(file.filename)}>
-              <div className="flex justify-between w-full">
-                <div className="flex items-center gap-2">
-                  {selectedFiles.has(file.filename) ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
-                  <span className="truncate">{file.filename}</span>
+          {filteredFiles.map((file) => {
+            const isSelected = selectedFiles.has(file.filename)
+            const isExisting = existingFilesSet.has(file.filename)
+            return (
+              <Button key={file.filename} variant="ghost" className="justify-start font-mono text-xs h-auto py-2" onClick={() => !isExisting && handleToggle(file.filename)}>
+                <div className="flex justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    {isSelected ? <CheckSquare className="h-3 w-3" /> : <Square className="h-3 w-3" />}
+                    <span className="truncate">{file.filename}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground ml-2 shrink-0">
+                      +{file.additions} -{file.deletions}
+                    </span>
+                    {isExisting && <span className="text-xs text-muted-foreground">Already added</span>}
+                  </div>
                 </div>
-                <span className="text-muted-foreground ml-2 shrink-0">
-                  +{file.additions} -{file.deletions}
-                </span>
-              </div>
-            </Button>
-          ))}
+              </Button>
+            )
+          })}
         </div>
         <DialogFooter>
           <div className="flex justify-between w-full">

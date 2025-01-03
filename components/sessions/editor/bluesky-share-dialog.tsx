@@ -4,21 +4,85 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SessionBlock } from "@/lib/types/session"
 import { BlueskyIcon } from "@/components/icons/bluesky"
-import { useState } from "react"
-import { connectBlueskyAccount, getBlueskyConnection } from "@/app/api/bluesky/actions"
+import { useEffect, useState } from "react"
+import { connectBlueskyAccount, disconnectBlueskyAccount, getBlueskyConnection } from "@/app/api/bluesky/actions"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+import { ThreadPreview } from "./thread-preview"
+import { MAX_POST_LENGTH, type ThreadPost, extractHandleFromUrl, formatBlueskyThread } from "@/lib/bluesky/format"
 
 interface BlueskyShareDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   blocks: SessionBlock[]
+  projectFullName?: string
 }
 
-export function BlueskyShareDialog({ open, onOpenChange, title, blocks }: BlueskyShareDialogProps) {
+export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectFullName }: BlueskyShareDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
+  const [connectedHandle, setConnectedHandle] = useState<string | null>(null)
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
+  const [editedPosts, setEditedPosts] = useState<ThreadPost[]>([])
+  const hasImages = blocks.some((block) => block.type === "image")
+
+  useEffect(() => {
+    if (open) {
+      checkConnection()
+      const { posts } = formatBlueskyThread(title, blocks, projectFullName)
+      setEditedPosts(posts)
+    }
+  }, [open, title, blocks, projectFullName])
+
+  function handlePostChange(index: number, content: string) {
+    setEditedPosts((currentPosts) => {
+      const newPosts = [...currentPosts]
+      const currentPost = newPosts[index]
+
+      // If content is empty and there are images
+      if (!content.trim() && currentPost.images?.length) {
+        // Find target post for images
+        const targetIndex = index === 0 ? 1 : index - 1
+        if (targetIndex < newPosts.length) {
+          // Move images to target post
+          newPosts[targetIndex] = {
+            ...newPosts[targetIndex],
+            images: [...(newPosts[targetIndex].images || []), ...(currentPost.images || [])],
+          }
+        }
+      }
+
+      // If content is empty, remove the post
+      if (!content.trim() && (!currentPost.images?.length || index !== 0)) {
+        return newPosts.filter((_, i) => i !== index)
+      }
+
+      // Otherwise update the post content
+      newPosts[index] = { ...currentPost, text: content }
+      return newPosts
+    })
+  }
+
+  async function checkConnection() {
+    setIsCheckingConnection(true)
+    const connection = await getBlueskyConnection()
+    if (connection) {
+      setIsConnected(true)
+      setConnectedHandle(connection.handle)
+    } else {
+      setIsConnected(false)
+      setConnectedHandle(null)
+    }
+    setIsCheckingConnection(false)
+  }
+
+  function handleIdentifierChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value
+    setIdentifier(extractHandleFromUrl(value))
+  }
 
   async function handleConnect(e: React.FormEvent) {
     e.preventDefault()
@@ -29,6 +93,7 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks }: Bluesk
       if (!result.success) {
         throw new Error(result.error)
       }
+      await checkConnection()
       toast.success("Successfully connected to Bluesky!")
       setIdentifier("")
       setPassword("")
@@ -39,51 +104,114 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks }: Bluesk
     }
   }
 
+  async function handleDisconnect() {
+    setIsLoading(true)
+    try {
+      const result = await disconnectBlueskyAccount()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      setIsConnected(false)
+      setConnectedHandle(null)
+      toast.success("Successfully disconnected from Bluesky")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to disconnect from Bluesky")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className={cn("transition-all duration-300 ease-in-out", isConnected ? "max-w-3xl" : "max-w-lg")}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BlueskyIcon className="h-5 w-5 text-blue-500" />
-            Share to Bluesky
+          <DialogTitle className="flex justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <BlueskyIcon className="h-5 w-5 text-blue-500" />
+              Share to Bluesky
+            </div>
+            <div className="flex items-center justify-between gap-4 pr-8 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-medium">Connected as {connectedHandle}</span>
+              </div>
+              <button className="text-xs sm:text-sm text-red-500/70 py-1 h-auto" onClick={handleDisconnect} disabled={isLoading}>
+                {isLoading ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
           </DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div>
           <div className="space-y-4">
-            <div className="p-4 rounded-lg border bg-muted">
-              <p className="font-medium">{title}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {blocks.filter((b) => b.type === "markdown").length} text blocks
-                {blocks.filter((b) => b.type === "code" || b.type === "diff").length > 0 && `, ${blocks.filter((b) => b.type === "code" || b.type === "diff").length} code blocks`}
-                {blocks.filter((b) => b.type === "image").length > 0 && `, ${blocks.filter((b) => b.type === "image").length} images`}
-              </p>
-            </div>
-            <form onSubmit={handleConnect} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="identifier">Email or Handle</Label>
-                <Input id="identifier" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="you@example.com or you.bsky.social" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">App Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your Bluesky app password" required />
-                <p className="text-xs text-muted-foreground">
-                  Create an app password at{" "}
-                  <a href="https://bsky.app/settings/app-passwords" target="_blank" rel="noopener noreferrer" className="underline">
-                    bsky.app/settings/app-passwords
-                  </a>
-                </p>
-              </div>
-              <DialogFooter>
-                <div className="flex justify-between w-full">
-                  <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Connecting..." : "Connect Bluesky Account"}
-                  </Button>
+            {isCheckingConnection ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                  <span className="text-sm text-muted-foreground">Checking connection...</span>
                 </div>
-              </DialogFooter>
-            </form>
+              </div>
+            ) : isConnected ? (
+              <div>
+                <div className="space-y-2">
+                  <ThreadPreview posts={editedPosts} onPostChange={handlePostChange} />
+                  {hasImages && <p className="text-xs text-muted-foreground mt-1">Images will be attached to their respective posts</p>}
+                </div>
+                <DialogFooter>
+                  <div className="flex justify-between w-full pt-4">
+                    <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="button" disabled={isLoading || editedPosts.some((post) => post.text.length > MAX_POST_LENGTH)}>
+                      Post Thread ({editedPosts.length} {editedPosts.length === 1 ? "post" : "posts"})
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </div>
+            ) : (
+              <form onSubmit={handleConnect} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="identifier">Email or Handle</Label>
+                  <Input
+                    id="identifier"
+                    value={identifier}
+                    onChange={handleIdentifierChange}
+                    placeholder="you@example.com or you.bsky.social"
+                    required
+                    autoComplete="off"
+                    spellCheck="false"
+                    data-form-type="other"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">App Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your Bluesky app password"
+                    required
+                    autoComplete="new-password"
+                    data-form-type="other"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Create an app password at{" "}
+                    <a href="https://bsky.app/settings/app-passwords" target="_blank" rel="noopener noreferrer" className="underline">
+                      bsky.app/settings/app-passwords
+                    </a>
+                  </p>
+                </div>
+                <DialogFooter>
+                  <div className="flex justify-end gap-4 w-full">
+                    <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Connecting..." : "Connect Bluesky Account"}
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </form>
+            )}
           </div>
         </div>
       </DialogContent>
