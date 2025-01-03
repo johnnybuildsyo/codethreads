@@ -27,7 +27,10 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
   const [editedPosts, setEditedPosts] = useState<ThreadPost[]>([])
+  const [isPosting, setIsPosting] = useState(false)
   const hasImages = blocks.some((block) => block.type === "image")
+
+  const commonHashtags = ["buildinpublic", "codethread", "indiehacker", "webdev", "gamedev", "codecooking"]
 
   useEffect(() => {
     if (open) {
@@ -36,6 +39,29 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
       setEditedPosts(posts)
     }
   }, [open, title, blocks, projectFullName])
+
+  function addHashtag(tag: string) {
+    if (editedPosts.length === 0) return
+
+    setEditedPosts((currentPosts) => {
+      const newPosts = [...currentPosts]
+      const firstPost = newPosts[0]
+
+      // Remove # if it was included
+      tag = tag.replace(/^#/, "")
+
+      // Check if hashtag already exists
+      const hashtagPattern = new RegExp(`#${tag}\\b`, "i")
+      if (hashtagPattern.test(firstPost.text)) return newPosts
+
+      // Add hashtag to the end of the first post
+      newPosts[0] = {
+        ...firstPost,
+        text: firstPost.text.trim() + `\n\\#${tag}`,
+      }
+      return newPosts
+    })
+  }
 
   function handlePostChange(index: number, content: string) {
     setEditedPosts((currentPosts) => {
@@ -121,23 +147,49 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
     }
   }
 
+  async function handlePost() {
+    setIsPosting(true)
+    try {
+      const response = await fetch("/api/bluesky/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ posts: editedPosts }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        console.log({ posts: editedPosts, data })
+        throw new Error(data.error || "Failed to post to Bluesky")
+      }
+
+      toast.success("Successfully posted to Bluesky!")
+      onOpenChange(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to post to Bluesky")
+    } finally {
+      setIsPosting(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("transition-all duration-300 ease-in-out", isConnected ? "max-w-3xl" : "max-w-lg")}>
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-2xl font-bold">
               <BlueskyIcon className="h-5 w-5 text-blue-500" />
               Share to Bluesky
             </div>
-            <div className="flex items-center justify-between gap-4 pr-8 py-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm font-medium">Connected as {connectedHandle}</span>
+            {isConnected && (
+              <div className="flex items-center justify-between gap-4 pr-8 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-medium">Connected as {connectedHandle}</span>
+                </div>
+                <button className="text-xs sm:text-sm text-red-500/70 py-1 h-auto" onClick={handleDisconnect} disabled={isLoading}>
+                  {isLoading ? "Disconnecting..." : "Disconnect"}
+                </button>
               </div>
-              <button className="text-xs sm:text-sm text-red-500/70 py-1 h-auto" onClick={handleDisconnect} disabled={isLoading}>
-                {isLoading ? "Disconnecting..." : "Disconnect"}
-              </button>
-            </div>
+            )}
           </DialogTitle>
         </DialogHeader>
         <div>
@@ -151,17 +203,38 @@ export function BlueskyShareDialog({ open, onOpenChange, title, blocks, projectF
               </div>
             ) : isConnected ? (
               <div>
-                <div className="space-y-2">
-                  <ThreadPreview posts={editedPosts} onPostChange={handlePostChange} />
-                  {hasImages && <p className="text-xs text-muted-foreground mt-1">Images will be attached to their respective posts</p>}
+                <div className="space-y-4">
+                  {editedPosts.length > 0 && (
+                    <div className="space-y-1">
+                      <Label className="pl-1">Add Hashtags</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {commonHashtags.map((tag) => (
+                          <Button key={tag} type="button" variant="outline" size="sm" onClick={() => addHashtag(tag)} className="text-xs">
+                            #{tag}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <ThreadPreview posts={editedPosts} onPostChange={handlePostChange} />
+                    {hasImages && <p className="text-xs text-muted-foreground mt-1">Images will be attached to their respective posts</p>}
+                  </div>
                 </div>
                 <DialogFooter>
                   <div className="flex justify-between w-full pt-4">
                     <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                       Cancel
                     </Button>
-                    <Button type="button" disabled={isLoading || editedPosts.some((post) => post.text.length > MAX_POST_LENGTH)}>
-                      Post Thread ({editedPosts.length} {editedPosts.length === 1 ? "post" : "posts"})
+                    <Button type="button" onClick={handlePost} disabled={isPosting || editedPosts.some((post) => post.text.length > MAX_POST_LENGTH)}>
+                      {isPosting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                          <span>Posting...</span>
+                        </div>
+                      ) : (
+                        `Post Thread (${editedPosts.length} ${editedPosts.length === 1 ? "post" : "posts"})`
+                      )}
                     </Button>
                   </div>
                 </DialogFooter>

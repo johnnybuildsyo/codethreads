@@ -243,7 +243,7 @@ export function formatBlueskyThread(title: string, blocks: SessionBlock[], proje
 
   // Combine title with first post or create new first post
   if (posts.length > 0) {
-    const titleAndFirstPost = `${title}\n\n${posts[0].text}`
+    const titleAndFirstPost = `${title}: ${posts[0].text}`
     if (titleAndFirstPost.length <= MAX_POST_LENGTH) {
       posts[0] = { ...posts[0], text: titleAndFirstPost }
     } else {
